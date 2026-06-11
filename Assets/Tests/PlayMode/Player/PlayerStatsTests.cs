@@ -8,11 +8,10 @@ public class PlayerStatsTests
 {
     private readonly List<GameObject> createdObjects = new List<GameObject>();
 
-    [UnitySetUp]
-    public IEnumerator SetUp()
+    [SetUp]
+    public void SetUp()
     {
         PlayModeTestScene.PrepareIsolatedTestScene();
-        yield return null;
     }
 
     [UnityTearDown]
@@ -32,12 +31,10 @@ public class PlayerStatsTests
     }
 
     #region Initialization
-    [UnityTest]
-    public IEnumerator Awake_WhenPlayerStatsStarts_ShouldInitializeAllStats()
+    [Test]
+    public void Awake_WhenPlayerStatsStarts_ShouldInitializeAllStats()
     {
         PlayerStats playerStats = CreatePlayerStats();
-
-        yield return null;
 
         Assert.AreEqual(playerStats.MaxHealth, playerStats.CurrentHealth, TestValues.Tolerance, "Verifies that PlayerStats initializes CurrentHealth to MaxHealth in PlayMode.");
         Assert.AreEqual(playerStats.MaxShield, playerStats.CurrentShield, TestValues.Tolerance, "Verifies that PlayerStats initializes CurrentShield to MaxShield in PlayMode.");
@@ -50,8 +47,6 @@ public class PlayerStatsTests
     public IEnumerator HealOverTime_WhenHealthIsDamaged_ShouldRestoreCurrentHealthThroughUpdate()
     {
         PlayerStats playerStats = CreatePlayerStats();
-
-        yield return null;
 
         float healthDamage = playerStats.MaxHealth * TestValues.HalfRatio;
         playerStats.TakeDamage(playerStats.MaxShield + healthDamage);
@@ -77,8 +72,6 @@ public class PlayerStatsTests
     public IEnumerator RechargeShieldOverTime_WhenShieldIsDamaged_ShouldRestoreCurrentShieldThroughUpdate()
     {
         PlayerStats playerStats = CreatePlayerStats();
-
-        yield return null;
 
         float shieldDamage = playerStats.MaxShield * TestValues.HalfRatio;
         playerStats.TakeDamage(shieldDamage);

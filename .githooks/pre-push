@@ -162,7 +162,7 @@ run_tests() {
 
   if [[ -f "$xml" ]] && grep -Eq '<test-run .*failed="[1-9]' "$xml"; then
   echo "Nieudane testy:"
-  sed -n 's/.*<test-case.*name="\([^"]*\)".*result="Failed".*/  - \1/p' "$xml"
+  sed -n 's/.*<test-case[^>]*methodname="\([^"]*\)"[^>]*result="Failed".*/  - \1/p' "$xml"
 
   elif grep -Eqi 'Licensing initialization failed|Timed-out.*Licensing' "$log"; then
     echo "[PRE-PUSH][$OS][LICENCJA] Unity nie zainicjalizowało licencji."
