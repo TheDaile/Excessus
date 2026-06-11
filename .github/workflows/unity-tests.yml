@@ -3,6 +3,7 @@ name: Unity Tests
 on:
   pull_request:
     branches:
+      - development
       - main
 
 permissions:
@@ -16,9 +17,10 @@ jobs:
     steps:
       - name: Require development branch
         env:
+          BASE_BRANCH: ${{ github.base_ref }}
           HEAD_BRANCH: ${{ github.head_ref }}
         run: |
-          if [[ "$HEAD_BRANCH" != "development" ]]; then
+          if [[ "$BASE_BRANCH" == "main" && "$HEAD_BRANCH" != "development" ]]; then
             echo "Main przyjmuje zmiany tylko z development."
             exit 1
           fi
