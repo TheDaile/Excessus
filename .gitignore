@@ -105,3 +105,20 @@ InitTestScene*.unity*
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
 /TestResults/
+
+# Other
+# Secrets
+.env
+.env.*
+!.env.example
+*.ulf
+*.pem
+*.p12
+*.pfx
+*.keystore
+*.jks
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.idea/
