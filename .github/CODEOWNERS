@@ -1,0 +1,14 @@
+# Konfiguracja GitHub i CI
+/.github/ @KrajewskiD
+
+# Hooki Git
+/.githooks/ @KrajewskiD
+
+# Konfiguracja Git
+/.gitignore @KrajewskiD
+/.gitattributes @KrajewskiD
+/.gitmodules @KrajewskiD
+
+# Konfiguracja projektu
+/setup.* @KrajewskiD
+/SETUP.md @KrajewskiD
