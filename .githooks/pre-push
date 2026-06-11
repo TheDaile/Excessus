@@ -160,26 +160,32 @@ run_tests() {
     return 0
   fi
 
-  echo "[PRE-PUSH][$OS][BŁĄD] Testy $mode nie przeszły."
+  if [[ -f "$xml" ]] && grep -Eq '<test-run .*failed="[1-9]' "$xml"; then
+  echo "Nieudane testy:"
+  sed -n 's/.*<test-case.*name="\([^"]*\)".*result="Failed".*/  - \1/p' "$xml"
 
-  if grep -Eqi 'Unsupported protocol|Licensing.*failed|Licensing is not yet initialized' "$log"; then
+  elif grep -Eqi 'Licensing initialization failed|Timed-out.*Licensing' "$log"; then
+    echo "[PRE-PUSH][$OS][LICENCJA] Unity nie zainicjalizowało licencji."
+
     if [[ "$OS" == "macOS" ]]; then
       echo "Zamknij Unity Hub przez Cmd+Q i Unity.Licensing.Client w Monitorze aktywności."
     else
       echo "Zamknij Unity Hub z zasobnika i Unity.Licensing.Client w Menedżerze zadań."
     fi
+
   elif grep -Eqi 'Package Manager.*(error|failed)|Failed to resolve packages' "$log" "$upm"; then
-    echo "Nie udało się uruchomić Package Managera. Sprawdź plik: $upm"
+    echo "Nie udało się uruchomić Package Managera."
+    echo "Log Package Managera: $upm"
+
   elif grep -Eqi 'error CS[0-9]+|Scripts have compiler errors' "$log"; then
     echo "Projekt zawiera błędy kompilacji:"
     grep -E 'error CS[0-9]+' "$log" | tail -n 10
-  elif [[ -f "$xml" ]]; then
-    echo "Nieudane testy:"
-    sed -n 's/.*<test-case.*name="\([^"]*\)".*result="Failed".*/  - \1/p' "$xml"
+
   else
-    echo "Unity nie utworzyło raportu XML. Sprawdź końcówkę logu:"
+    echo "Unity zakończyło się nieznanym błędem."
     tail -n 20 "$log"
   fi
+
 
   echo "Pełny log: $log"
   return "${code:-2}"
