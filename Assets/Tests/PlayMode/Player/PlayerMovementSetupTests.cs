@@ -8,11 +8,10 @@ public class PlayerMovementSetupTests
 {
     private readonly List<GameObject> createdObjects = new List<GameObject>();
 
-    [UnitySetUp]
-    public IEnumerator SetUp()
+    [SetUp]
+    public void SetUp()
     {
         PlayModeTestScene.PrepareIsolatedTestScene();
-        yield return null;
     }
 
     [UnityTearDown]
@@ -32,49 +31,42 @@ public class PlayerMovementSetupTests
     }
 
     #region Required Components
-    [UnityTest]
-    public IEnumerator AddComponent_WhenPlayerMovementIsAdded_ShouldAddCharacterController()
+    [Test]
+    public void AddComponent_WhenPlayerMovementIsAdded_ShouldAddCharacterController()
     {
         GameObject playerObject = CreateGameObject("Movement Player");
 
         playerObject.AddComponent<PlayerMovement>();
 
-        yield return null;
-
-        Assert.IsNotNull(playerObject.GetComponent<CharacterController>(), "Verifies that RequireComponent adds CharacterController when PlayerMovement is added.");
+        Assert.IsNotNull(playerObject.GetComponent<CharacterController>());
     }
     #endregion
 
     #region Movement
-    [UnityTest]
-    public IEnumerator ProcessMove_WhenForwardInputIsProvided_ShouldMovePlayerForward()
+    [Test]
+    public void ProcessMove_WhenForwardInputIsProvided_ShouldMovePlayerForward()
     {
         PlayerMovement movement = CreateMovementPlayer(Vector3.zero);
-
-        yield return null;
-
         Vector3 startPosition = movement.transform.position;
 
-        movement.ProcessMove(Vector2.up);
+        movement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
 
         Assert.Greater(movement.transform.position.z, startPosition.z, "Verifies that forward input moves the player forward in PlayMode.");
     }
 
-    [UnityTest]
-    public IEnumerator SetSprinting_WhenEnabled_ShouldMoveFartherThanWalking()
+    [Test]
+    public void SetSprinting_WhenEnabled_ShouldMoveFartherThanWalking()
     {
         PlayerMovement walkingMovement = CreateMovementPlayer(Vector3.left * TestValues.MovementSpawnOffset);
         PlayerMovement sprintingMovement = CreateMovementPlayer(Vector3.right * TestValues.MovementSpawnOffset);
-
-        yield return null;
 
         Vector3 walkingStartPosition = walkingMovement.transform.position;
         Vector3 sprintingStartPosition = sprintingMovement.transform.position;
 
         sprintingMovement.SetSprinting(true);
 
-        walkingMovement.ProcessMove(Vector2.up);
-        sprintingMovement.ProcessMove(Vector2.up);
+        walkingMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
+        sprintingMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
 
         float walkingDistance = walkingMovement.transform.position.z - walkingStartPosition.z;
         float sprintingDistance = sprintingMovement.transform.position.z - sprintingStartPosition.z;
@@ -82,21 +74,19 @@ public class PlayerMovementSetupTests
         Assert.Greater(sprintingDistance, walkingDistance, "Verifies that enabling sprint makes PlayerMovement cover more distance than normal movement.");
     }
 
-    [UnityTest]
-    public IEnumerator Sprint_WhenCalled_ShouldUseSprintMovement()
+    [Test]
+    public void Sprint_WhenCalled_ShouldUseSprintMovement()
     {
         PlayerMovement walkingMovement = CreateMovementPlayer(Vector3.left * TestValues.MovementSpawnOffset);
         PlayerMovement sprintingMovement = CreateMovementPlayer(Vector3.right * TestValues.MovementSpawnOffset);
-
-        yield return null;
 
         Vector3 walkingStartPosition = walkingMovement.transform.position;
         Vector3 sprintingStartPosition = sprintingMovement.transform.position;
 
         sprintingMovement.Sprint();
 
-        walkingMovement.ProcessMove(Vector2.up);
-        sprintingMovement.ProcessMove(Vector2.up);
+        walkingMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
+        sprintingMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
 
         float walkingDistance = walkingMovement.transform.position.z - walkingStartPosition.z;
         float sprintingDistance = sprintingMovement.transform.position.z - sprintingStartPosition.z;
@@ -104,27 +94,23 @@ public class PlayerMovementSetupTests
         Assert.Greater(sprintingDistance, walkingDistance, "Verifies that Sprint uses the current sprint toggle behavior instead of the old direct speed mutation.");
     }
 
-    [UnityTest]
-    public IEnumerator Sprint_WhenCalled_ShouldNotChangeBasePlayerSpeed()
+    [Test]
+    public void Sprint_WhenCalled_ShouldNotChangeBasePlayerSpeed()
     {
         PlayerMovement movement = CreateMovementPlayer(Vector3.zero);
 
-        yield return null;
-
-        float startSpeed = movement.playerSpeed;
+        float startSpeed = movement.PlayerSpeedForTests;
 
         movement.Sprint();
 
-        Assert.AreEqual(startSpeed, movement.playerSpeed, TestValues.Tolerance, "Verifies that Sprint toggles sprint state without mutating the base playerSpeed value.");
+        Assert.AreEqual(startSpeed, movement.PlayerSpeedForTests, TestValues.Tolerance, "Verifies that Sprint toggles sprint state without mutating the base playerSpeed value.");
     }
 
-    [UnityTest]
-    public IEnumerator Sprint_WhenCalledTwice_ShouldReturnToWalkingMovement()
+    [Test]
+    public void Sprint_WhenCalledTwice_ShouldReturnToWalkingMovement()
     {
         PlayerMovement walkingMovement = CreateMovementPlayer(Vector3.left * TestValues.MovementSpawnOffset);
         PlayerMovement toggledMovement = CreateMovementPlayer(Vector3.right * TestValues.MovementSpawnOffset);
-
-        yield return null;
 
         Vector3 walkingStartPosition = walkingMovement.transform.position;
         Vector3 toggledStartPosition = toggledMovement.transform.position;
@@ -132,8 +118,8 @@ public class PlayerMovementSetupTests
         toggledMovement.Sprint();
         toggledMovement.Sprint();
 
-        walkingMovement.ProcessMove(Vector2.up);
-        toggledMovement.ProcessMove(Vector2.up);
+        walkingMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
+        toggledMovement.ProcessMoveForTests(Vector2.up, TestValues.OneSecond);
 
         float walkingDistance = walkingMovement.transform.position.z - walkingStartPosition.z;
         float toggledDistance = toggledMovement.transform.position.z - toggledStartPosition.z;
@@ -147,8 +133,6 @@ public class PlayerMovementSetupTests
     public IEnumerator ToggleCrouch_WhenCalled_ShouldStartReducingControllerHeight()
     {
         PlayerMovement movement = CreateMovementPlayer(Vector3.zero);
-
-        yield return null;
 
         CharacterController controller = movement.GetComponent<CharacterController>();
         float startHeight = controller.height;
@@ -167,8 +151,6 @@ public class PlayerMovementSetupTests
     public IEnumerator Crouch_WhenCalled_ShouldUseToggleCrouchBehavior()
     {
         PlayerMovement movement = CreateMovementPlayer(Vector3.zero);
-
-        yield return null;
 
         CharacterController controller = movement.GetComponent<CharacterController>();
         float startHeight = controller.height;
@@ -191,9 +173,10 @@ public class PlayerMovementSetupTests
         playerObject.transform.position += position;
 
         PlayerMovement movement = playerObject.AddComponent<PlayerMovement>();
-        movement.gravity = TestValues.Empty;
-        movement.playerSpeed = TestValues.TestPlayerSpeed;
-        movement.sprintMultiplier = TestValues.SprintMultiplier;
+
+        Assert.IsTrue(movement.SetGravityForTests(TestValues.Empty), "The test gravity value should be accepted.");
+        Assert.IsTrue(movement.SetPlayerSpeedForTests(TestValues.TestPlayerSpeed), "The test player speed should be accepted.");
+        Assert.IsTrue(movement.SetSprintMultiplierForTests(TestValues.SprintMultiplier), "The test sprint multiplier should be accepted.");
 
         playerObject.SetActive(true);
 

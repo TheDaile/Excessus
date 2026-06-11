@@ -5,21 +5,22 @@ public class PlayerMovement : MonoBehaviour
 {
     private CharacterController controller;
     private Vector3 playerVelocity;
-    public float playerSpeed = 5.0f;
-    public float sprintMultiplier = 1.5f;
-    public float gravity = -9.81f;
-    public float jumpHeight = 3.0f;
+    [SerializeField] private float playerSpeed = 5.0f;
+    [SerializeField] private float sprintMultiplier = 1.5f;
+    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private float jumpHeight = 3.0f;
     private bool groundedPlayer;
     private bool sprinting = false;
     private bool crouching = false;
     private bool lerpCrouch = false;    
     private float crouchTimer = 0f;
-    void Start()
+
+    private void Awake()
     {
-        controller = gameObject.GetComponent<CharacterController>();
+        controller = GetComponent<CharacterController>();
     }
 
-    void Update()
+    private void Update()
     {
         if (lerpCrouch)
         {
@@ -44,6 +45,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void ProcessMove(Vector2 input)
     {
+        ProcessMove(input, Time.deltaTime);
+    }
+
+    private void ProcessMove(Vector2 input, float deltaTime)
+    {
         groundedPlayer = controller.isGrounded;
 
         if (groundedPlayer && playerVelocity.y < 0)
@@ -56,11 +62,12 @@ public class PlayerMovement : MonoBehaviour
         moveDirection = transform.TransformDirection(moveDirection);
  
         float speed = sprinting ? playerSpeed * sprintMultiplier : playerSpeed;
-        controller.Move(moveDirection * Time.deltaTime * speed);
+        controller.Move(moveDirection * deltaTime * speed);
 
-        playerVelocity.y += gravity * Time.deltaTime;
-        controller.Move(playerVelocity * Time.deltaTime);
+        playerVelocity.y += gravity * deltaTime;
+        controller.Move(playerVelocity * deltaTime);
     }
+
     public void SetSprinting(bool value) => sprinting = value;
     public void Sprint() => ToggleSprint();
     public void ToggleSprint() => SetSprinting(!sprinting);
@@ -83,4 +90,55 @@ public class PlayerMovement : MonoBehaviour
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
         }
     }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    internal float PlayerSpeedForTests => playerSpeed;
+
+    internal bool SetPlayerSpeedForTests(float value)
+    {
+        if (value <= 0f)
+        {
+            return false;
+        }
+
+        playerSpeed = value;
+        return true;
+    }
+
+    internal bool SetSprintMultiplierForTests(float value)
+    {
+        if (value <= 0f)
+        {
+            return false;
+        }
+
+        sprintMultiplier = value;
+        return true;
+    }
+
+    internal bool SetGravityForTests(float value)
+    {
+        if (value > 0f)
+        {
+            return false;
+        }
+
+        gravity = value;
+        return true;
+    }
+
+    internal void ProcessMoveForTests(Vector2 input, float deltaTime)
+    {
+        if (deltaTime < 0f)
+        {
+            throw new System.ArgumentOutOfRangeException(
+                nameof(deltaTime),
+                deltaTime,
+                "PlayerMovement.ProcessMoveForTests requires a non-negative delta time."
+            );
+        }
+
+        ProcessMove(input, deltaTime);
+    }
+#endif
 }

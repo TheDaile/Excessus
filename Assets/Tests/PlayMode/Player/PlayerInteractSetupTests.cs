@@ -15,11 +15,10 @@ public class PlayerInteractSetupTests
     private readonly List<GameObject> createdObjects = new List<GameObject>();
     private Camera playerCamera;
 
-    [UnitySetUp]
-    public IEnumerator SetUp()
+    [SetUp]
+    public void SetUp()
     {
         PlayModeTestScene.PrepareIsolatedTestScene();
-        yield return null;
     }
 
     [UnityTearDown]
@@ -40,27 +39,25 @@ public class PlayerInteractSetupTests
     }
 
     #region Raycast Detection
-    [UnityTest]
-    public IEnumerator CheckForInteractable_WhenRayHitsInteractable_ShouldShowPrompt()
+    [Test]
+    public void CheckForInteractable_WhenRayHitsInteractable_ShouldShowPrompt()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out TextMeshProUGUI promptText);
         CreateInteractable(GetPositionInFrontOfCamera(), PromptMessage);
 
         Physics.SyncTransforms();
-        yield return null;
 
         playerInteract.CheckForInteractable();
 
         Assert.AreEqual(ExpectedPrompt, promptText.text, "Verifies that PlayerInteract shows the interaction prompt when the raycast hits an Interactable.");
     }
 
-    [UnityTest]
-    public IEnumerator CheckForInteractable_WhenRayDoesNotHitInteractable_ShouldClearPrompt()
+    [Test]
+    public void CheckForInteractable_WhenRayDoesNotHitInteractable_ShouldClearPrompt()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out TextMeshProUGUI promptText);
 
         Physics.SyncTransforms();
-        yield return null;
 
         promptText.text = PreviousPrompt;
         playerInteract.CheckForInteractable();
@@ -68,14 +65,13 @@ public class PlayerInteractSetupTests
         Assert.AreEqual(string.Empty, promptText.text, "Verifies that PlayerInteract clears the prompt when the raycast does not hit an Interactable.");
     }
 
-    [UnityTest]
-    public IEnumerator CheckForInteractable_WhenRayHitsObjectWithoutInteractable_ShouldClearPrompt()
+    [Test]
+    public void CheckForInteractable_WhenRayHitsObjectWithoutInteractable_ShouldClearPrompt()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out TextMeshProUGUI promptText);
         CreatePlainCollider(GetPositionInFrontOfCamera());
 
         Physics.SyncTransforms();
-        yield return null;
 
         promptText.text = PreviousPrompt;
         playerInteract.CheckForInteractable();
@@ -83,14 +79,13 @@ public class PlayerInteractSetupTests
         Assert.AreEqual(string.Empty, promptText.text, "Verifies that PlayerInteract does not show a prompt when the raycast hits a collider without Interactable.");
     }
 
-    [UnityTest]
-    public IEnumerator CheckForInteractable_WhenPreviouslyDetectedTargetIsLost_ShouldClearCurrentInteractable()
+    [Test]
+    public void CheckForInteractable_WhenPreviouslyDetectedTargetIsLost_ShouldClearCurrentInteractable()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out TextMeshProUGUI promptText);
         InteractableRecorder interactable = CreateInteractable(GetPositionInFrontOfCamera(), PromptMessage);
 
         Physics.SyncTransforms();
-        yield return null;
 
         playerInteract.CheckForInteractable();
 
@@ -99,7 +94,6 @@ public class PlayerInteractSetupTests
         interactable.transform.position = GetPositionNextToCamera();
 
         Physics.SyncTransforms();
-        yield return null;
 
         playerInteract.CheckForInteractable();
         playerInteract.Interact();
@@ -110,14 +104,13 @@ public class PlayerInteractSetupTests
     #endregion
 
     #region Interaction
-    [UnityTest]
-    public IEnumerator Interact_WhenCurrentInteractableExists_ShouldCallInteractable()
+    [Test]
+    public void Interact_WhenCurrentInteractableExists_ShouldCallInteractable()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out _);
         InteractableRecorder interactable = CreateInteractable(GetPositionInFrontOfCamera(), PromptMessage);
 
         Physics.SyncTransforms();
-        yield return null;
 
         playerInteract.CheckForInteractable();
         playerInteract.Interact();
@@ -125,13 +118,12 @@ public class PlayerInteractSetupTests
         Assert.AreEqual(TestValues.OneCall, interactable.InteractCallCount, "Verifies that Interact calls the currently detected Interactable exactly once.");
     }
 
-    [UnityTest]
-    public IEnumerator Interact_WhenCurrentInteractableIsMissing_ShouldNotThrow()
+    [Test]
+    public void Interact_WhenCurrentInteractableIsMissing_ShouldNotThrow()
     {
         PlayerInteract playerInteract = CreatePlayerInteract(out TextMeshProUGUI promptText);
 
         Physics.SyncTransforms();
-        yield return null;
 
         Assert.DoesNotThrow(() => playerInteract.Interact(), "Interact should safely do nothing when no Interactable is currently detected.");
         Assert.AreEqual(string.Empty, promptText.text, "Verifies that interacting without a target does not create HUD prompt text.");
@@ -201,6 +193,7 @@ public class PlayerInteractSetupTests
         promptText = promptObject.AddComponent<TextMeshProUGUI>();
 
         SetOnlyPrivateFieldOfType(playerHUD, promptText);
+        playerHUD.UpdateText(string.Empty);
 
         promptObject.SetActive(true);
         canvasObject.SetActive(true);
