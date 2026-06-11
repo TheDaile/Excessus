@@ -1,0 +1,18 @@
+{
+    "name": "Excessus.Tests.Shared",
+    "rootNamespace": "",
+    "references": [
+        "GUID:5f7c1d90dd4bd4819bd8e8207630b4a3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
