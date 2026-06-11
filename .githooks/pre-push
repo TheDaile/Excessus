@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+TIMEOUT="${UNITY_TEST_TIMEOUT:-1200}"
+ZERO="0000000000000000000000000000000000000000"
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+  echo "[PRE-PUSH][BŁĄD] Hook musi być uruchomiony wewnątrz repozytorium Git."
+  exit 10
+}
+
+SHA="$(git rev-parse HEAD)"
+
+# Podczas git push testuj commit faktycznie wysyłany.
+if [[ ! -t 0 ]]; then
+  while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
+    if [[ "$LOCAL_SHA" != "$ZERO" ]]; then
+      COMMIT="$(git rev-parse "${LOCAL_SHA}^{commit}" 2>/dev/null || true)"
+      [[ -n "$COMMIT" ]] && SHA="$COMMIT" && break
+    fi
+  done
+fi
+
+VERSION="$(
+  git show "$SHA:ProjectSettings/ProjectVersion.txt" 2>/dev/null |
+    sed -n 's/^m_EditorVersion: //p'
+)"
+
+[[ -n "$VERSION" ]] || {
+  echo "[PRE-PUSH][BŁĄD] Nie można odczytać wersji Unity z wysyłanego commita."
+  exit 11
+}
+
+case "$(uname -s)" in
+  Darwin*)
+    OS="macOS"
+    UNITY="${UNITY_PATH:-/Applications/Unity/Hub/Editor/$VERSION/Unity.app/Contents/MacOS/Unity}"
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    OS="Windows"
+    WINDOWS_UNITY="${PROGRAMFILES:-C:\\Program Files}\\Unity\\Hub\\Editor\\$VERSION\\Editor\\Unity.exe"
+    command -v cygpath >/dev/null && WINDOWS_UNITY="$(cygpath -u "$WINDOWS_UNITY")"
+    UNITY="${UNITY_PATH:-$WINDOWS_UNITY}"
+    ;;
+  *)
+    echo "[PRE-PUSH][BŁĄD] Nieobsługiwany system: $(uname -s)"
+    exit 12
+    ;;
+esac
+
+if [[ ! -e "$UNITY" ]]; then
+  echo "[PRE-PUSH][$OS][BŁĄD] Nie znaleziono Unity $VERSION."
+  echo "Sprawdzona ścieżka: $UNITY"
+
+  if [[ "$OS" == "macOS" ]]; then
+    echo 'Ustaw: export UNITY_PATH="/ścieżka/Unity.app/Contents/MacOS/Unity"'
+  else
+    echo 'Git Bash: export UNITY_PATH="/c/Program Files/Unity/.../Unity.exe"'
+  fi
+  exit 13
+fi
+
+TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/excessus-pre-push.XXXXXX")"
+TEST_PROJECT="$TEMP_ROOT/project"
+RESULTS="$ROOT/TestResults/PrePush/${SHA:0:12}"
+UNITY_PID=""
+WORKTREE_CREATED=0
+
+stop_unity() {
+  local pid="$1"
+
+  if [[ "$OS" == "Windows" ]]; then
+    MSYS_NO_PATHCONV=1 taskkill.exe /PID "$pid" /T /F >/dev/null 2>&1 || true
+  else
+    pkill -TERM -P "$pid" >/dev/null 2>&1 || true
+    kill -TERM "$pid" >/dev/null 2>&1 || true
+    sleep 3
+    pkill -KILL -P "$pid" >/dev/null 2>&1 || true
+    kill -KILL "$pid" >/dev/null 2>&1 || true
+  fi
+}
+
+cleanup() {
+  local status=$?
+  trap - EXIT INT TERM HUP
+  set +e
+
+  if [[ -n "$UNITY_PID" ]] && kill -0 "$UNITY_PID" 2>/dev/null; then
+    stop_unity "$UNITY_PID"
+  fi
+
+  if (( WORKTREE_CREATED )); then
+    git worktree remove --force "$TEST_PROJECT" >/dev/null 2>&1
+  fi
+
+  rm -rf "$TEMP_ROOT"
+  git worktree prune >/dev/null 2>&1
+  exit "$status"
+}
+
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+
+mkdir -p "$RESULTS"
+
+echo "[PRE-PUSH][$OS] Tworzenie izolowanego projektu dla ${SHA:0:12}..."
+
+if ! git worktree add --detach --quiet "$TEST_PROJECT" "$SHA"; then
+  echo "[PRE-PUSH][$OS][BŁĄD GIT] Nie udało się utworzyć tymczasowego worktree."
+  echo "Sprawdź Git LFS oraz wykonaj: git worktree prune"
+  exit 20
+fi
+
+WORKTREE_CREATED=1
+
+run_tests() {
+  local mode="$1"
+  local xml="$RESULTS/$mode.xml"
+  local log="$RESULTS/$mode.log"
+  local upm="$RESULTS/$mode-upm.log"
+  local started=$SECONDS
+  local code
+
+  echo "[PRE-PUSH][$OS] Uruchamianie testów $mode..."
+
+  "$UNITY" \
+    -batchmode \
+    -accept-apiupdate \
+    -timestamps \
+    -projectPath "$TEST_PROJECT" \
+    -runTests \
+    -testPlatform "$mode" \
+    -testResults "$xml" \
+    -logFile "$log" \
+    -upmLogFile "$upm" &
+
+  UNITY_PID=$!
+
+  while kill -0 "$UNITY_PID" 2>/dev/null; do
+    if (( SECONDS - started >= TIMEOUT )); then
+      stop_unity "$UNITY_PID"
+      wait "$UNITY_PID" 2>/dev/null || true
+      UNITY_PID=""
+      echo "[PRE-PUSH][$OS][TIMEOUT] Unity nie zakończyło testów przez ${TIMEOUT}s."
+      echo "Log: $log"
+      return 124
+    fi
+    sleep 2
+  done
+
+  set +e
+  wait "$UNITY_PID"
+  code=$?
+  set -e
+  UNITY_PID=""
+
+  if [[ -f "$xml" ]] && head -n 2 "$xml" | grep -q 'result="Passed"'; then
+    echo "[PRE-PUSH][$OS] Testy $mode zakończone pomyślnie."
+    return 0
+  fi
+
+  echo "[PRE-PUSH][$OS][BŁĄD] Testy $mode nie przeszły."
+
+  if grep -Eqi 'Unsupported protocol|Licensing.*failed|Licensing is not yet initialized' "$log"; then
+    if [[ "$OS" == "macOS" ]]; then
+      echo "Zamknij Unity Hub przez Cmd+Q i Unity.Licensing.Client w Monitorze aktywności."
+    else
+      echo "Zamknij Unity Hub z zasobnika i Unity.Licensing.Client w Menedżerze zadań."
+    fi
+  elif grep -Eqi 'Package Manager.*(error|failed)|Failed to resolve packages' "$log" "$upm"; then
+    echo "Nie udało się uruchomić Package Managera. Sprawdź plik: $upm"
+  elif grep -Eqi 'error CS[0-9]+|Scripts have compiler errors' "$log"; then
+    echo "Projekt zawiera błędy kompilacji:"
+    grep -E 'error CS[0-9]+' "$log" | tail -n 10
+  elif [[ -f "$xml" ]]; then
+    echo "Nieudane testy:"
+    sed -n 's/.*<test-case.*name="\([^"]*\)".*result="Failed".*/  - \1/p' "$xml"
+  else
+    echo "Unity nie utworzyło raportu XML. Sprawdź końcówkę logu:"
+    tail -n 20 "$log"
+  fi
+
+  echo "Pełny log: $log"
+  return "${code:-2}"
+}
+
+run_tests EditMode
+rm -f "$TEST_PROJECT/Temp/UnityLockfile"
+
+run_tests PlayMode
+
+echo "[PRE-PUSH][$OS] Wszystkie testy przeszły. Push jest dozwolony."
