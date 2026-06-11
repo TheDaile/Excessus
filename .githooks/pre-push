@@ -10,15 +10,42 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
 }
 
 SHA="$(git rev-parse HEAD)"
+PUSH_DATA=""
+IS_GIT_PUSH=0
 
 # Podczas git push testuj commit faktycznie wysyłany.
-if [[ ! -t 0 ]]; then
+if (( $# > 0 )); then
+  IS_GIT_PUSH=1
+  PUSH_DATA="$(cat)"
+  HAS_PUSH_COMMIT=0
+
   while read -r LOCAL_REF LOCAL_SHA REMOTE_REF REMOTE_SHA; do
-    if [[ "$LOCAL_SHA" != "$ZERO" ]]; then
-      COMMIT="$(git rev-parse "${LOCAL_SHA}^{commit}" 2>/dev/null || true)"
-      [[ -n "$COMMIT" ]] && SHA="$COMMIT" && break
+    [[ -n "${LOCAL_SHA:-}" ]] || continue
+    [[ "$LOCAL_SHA" != "$ZERO" ]] || continue
+
+    COMMIT="$(git rev-parse "${LOCAL_SHA}^{commit}" 2>/dev/null || true)"
+    [[ -n "$COMMIT" ]] || continue
+
+    if (( HAS_PUSH_COMMIT )) && [[ "$SHA" != "$COMMIT" ]]; then
+      echo "[PRE-PUSH][BŁĄD] Push zawiera kilka różnych commitów."
+      echo "Wyślij branche osobno, aby każdy commit został przetestowany."
+      exit 14
     fi
-  done
+
+    SHA="$COMMIT"
+    HAS_PUSH_COMMIT=1
+  done <<<"$PUSH_DATA"
+
+  if (( ! HAS_PUSH_COMMIT )); then
+    if ! command -v git-lfs >/dev/null 2>&1; then
+      echo "[PRE-PUSH][BŁĄD LFS] Git LFS nie jest zainstalowany."
+      exit 30
+    fi
+
+    printf '%s\n' "$PUSH_DATA" | git lfs pre-push "$@"
+    echo "[PRE-PUSH] Brak commitów do przetestowania."
+    exit 0
+  fi
 fi
 
 VERSION="$(
@@ -60,9 +87,28 @@ if [[ ! -e "$UNITY" ]]; then
   exit 13
 fi
 
+CACHE_DIR="$(git rev-parse --git-path unity-test-cache)"
+CACHE_FILE="$CACHE_DIR/$SHA"
+
+if [[ -f "$CACHE_FILE" ]]; then
+  echo "[PRE-PUSH][$OS] Commit ${SHA:0:12} przeszedł już wszystkie testy."
+  echo "[PRE-PUSH][$OS] Pomijam ponowne uruchamianie testów."
+
+  if (( IS_GIT_PUSH )); then
+    if ! command -v git-lfs >/dev/null 2>&1; then
+      echo "[PRE-PUSH][$OS][BŁĄD LFS] Git LFS nie jest zainstalowany."
+      exit 30
+    fi
+
+    printf '%s\n' "$PUSH_DATA" | git lfs pre-push "$@"
+  fi
+
+  exit 0
+fi
+
 TEMP_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/excessus-pre-push.XXXXXX")"
 TEST_PROJECT="$TEMP_ROOT/project"
-RESULTS="$ROOT/TestResults/PrePush/${SHA:0:12}"
+RESULTS_ROOT="$ROOT/TestResults/PrePush/${SHA:0:12}"
 UNITY_PID=""
 WORKTREE_CREATED=0
 
@@ -70,7 +116,14 @@ stop_unity() {
   local pid="$1"
 
   if [[ "$OS" == "Windows" ]]; then
-    MSYS_NO_PATHCONV=1 taskkill.exe /PID "$pid" /T /F >/dev/null 2>&1 || true
+    if command -v taskkill.exe >/dev/null 2>&1; then
+      MSYS_NO_PATHCONV=1 taskkill.exe /PID "$pid" /T /F >/dev/null 2>&1 || true
+    else
+      echo "[PRE-PUSH][Windows][UWAGA] Brak taskkill.exe. Zatrzymuję tylko główny proces Unity."
+      kill -TERM "$pid" >/dev/null 2>&1 || true
+      sleep 3
+      kill -KILL "$pid" >/dev/null 2>&1 || true
+    fi
   else
     pkill -TERM -P "$pid" >/dev/null 2>&1 || true
     kill -TERM "$pid" >/dev/null 2>&1 || true
@@ -102,7 +155,8 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM HUP
 
-mkdir -p "$RESULTS"
+mkdir -p "$RESULTS_ROOT"
+RESULTS="$(mktemp -d "$RESULTS_ROOT/run.XXXXXX")"
 
 echo "[PRE-PUSH][$OS] Tworzenie izolowanego projektu dla ${SHA:0:12}..."
 
@@ -123,6 +177,7 @@ run_tests() {
   local code
 
   echo "[PRE-PUSH][$OS] Uruchamianie testów $mode..."
+  rm -f "$xml" "$log" "$upm"
 
   "$UNITY" \
     -batchmode \
@@ -155,14 +210,16 @@ run_tests() {
   set -e
   UNITY_PID=""
 
-  if [[ -f "$xml" ]] && head -n 2 "$xml" | grep -q 'result="Passed"'; then
+  if (( code == 0 )) &&
+    [[ -f "$xml" ]] &&
+    head -n 2 "$xml" | grep -q 'result="Passed"'; then
     echo "[PRE-PUSH][$OS] Testy $mode zakończone pomyślnie."
     return 0
   fi
 
   if [[ -f "$xml" ]] && grep -Eq '<test-run .*failed="[1-9]' "$xml"; then
-  echo "Nieudane testy:"
-  sed -n 's/.*<test-case[^>]*methodname="\([^"]*\)"[^>]*result="Failed".*/  - \1/p' "$xml"
+    echo "Nieudane testy:"
+    sed -n 's/.*<test-case[^>]*methodname="\([^"]*\)"[^>]*result="Failed".*/  - \1/p' "$xml"
 
   elif grep -Eqi 'Licensing initialization failed|Timed-out.*Licensing' "$log"; then
     echo "[PRE-PUSH][$OS][LICENCJA] Unity nie zainicjalizowało licencji."
@@ -183,17 +240,35 @@ run_tests() {
 
   else
     echo "Unity zakończyło się nieznanym błędem."
-    tail -n 20 "$log"
+
+    if [[ -f "$log" ]]; then
+      tail -n 20 "$log"
+    else
+      echo "Unity nie utworzyło pliku logu: $log"
+    fi
   fi
 
-
   echo "Pełny log: $log"
-  return "${code:-2}"
+  (( code != 0 )) || code=2
+  return "$code"
 }
 
 run_tests EditMode
 rm -f "$TEST_PROJECT/Temp/UnityLockfile"
-
 run_tests PlayMode
+
+mkdir -p "$CACHE_DIR"
+touch "$CACHE_FILE"
+find "$CACHE_DIR" -type f -mtime +30 -delete 2>/dev/null || true
+
+if (( IS_GIT_PUSH )); then
+  if ! command -v git-lfs >/dev/null 2>&1; then
+    echo "[PRE-PUSH][$OS][BŁĄD LFS] Git LFS nie jest zainstalowany."
+    exit 30
+  fi
+
+  echo "[PRE-PUSH][$OS] Wysyłanie obiektów Git LFS..."
+  printf '%s\n' "$PUSH_DATA" | git lfs pre-push "$@"
+fi
 
 echo "[PRE-PUSH][$OS] Wszystkie testy przeszły. Push jest dozwolony."
