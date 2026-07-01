@@ -27,23 +27,12 @@ public class Gun: MonoBehaviour
         {
             Debug.Log(hit.transform.name);
 
-
-            Target  target = hit.transform.GetComponent<Target>();
-            if (target != null)
-            {
-                target.TakeDamageOfBox(damage);
-            }
-
-                        if (hit.collider.TryGetComponent<IDamageable>(out var damageable))
-            {
-                Debug.Log($"Enemy took {damage} damage");
-                damageable.TakeDamage(damage);
-            }
-
+            if (hit.collider.TryGetComponent<IDamageable>(out var damageable))
+    {
+        damageable.TakeDamage(damage);
+    }
             GameObject impactGO = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
             BulletEffect(hit);
-
-
 
             hit.rigidbody?.AddForce(-hit.normal * fireforce);
             
