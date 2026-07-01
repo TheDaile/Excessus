@@ -950,11 +950,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   walkPoint: {x: 0, y: 0, z: 0}
-  walkPointRange: 5
-  timeBetweenAttacks: 0.5
-  projectile: {fileID: 1731349747}
-  sightRange: 1
-  attackRange: 1
+  walkPointRange: 20
+  timeBetweenAttacks: 0.01
+  projectile: {fileID: 1732921868}
+  sightRange: 7.68
+  attackRange: 4.97
   playerInSightRange: 0
   playerInAttackRange: 0
 --- !u!195 &447556646
@@ -967,7 +967,7 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.5
-  m_Speed: 0
+  m_Speed: 11
   m_Acceleration: 12
   avoidancePriority: 50
   m_AngularSpeed: 1
@@ -1512,7 +1512,7 @@ MonoBehaviour:
   muzzleFlash: {fileID: 278054876}
   impactEffect: {fileID: 8876132480307443134, guid: 6bf64c0beb2f390429e5648e7bf77462, type: 3}
   fireforce: 200
-  fireRate: 10
+  fireRate: 1000
   nextTimeToFire: 0
   bulletEffect: {fileID: 3283310476105100864, guid: 4bb3ff8b58209de45b4450c509746fc5, type: 3}
 --- !u!1 &1097349552
@@ -2472,7 +2472,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &1732921870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2575,8 +2575,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -7.57, y: 1.39, z: 13.66}
-  m_LocalScale: {x: 2, y: 2, z: 2}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
