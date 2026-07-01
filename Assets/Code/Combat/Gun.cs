@@ -10,6 +10,8 @@ public class Gun: MonoBehaviour
     public float fireforce = 15f;
     public float fireRate = 15f;
     public float nextTimeToFire = 0f;
+
+    [SerializeField] public GameObject bulletEffect;
     void Start()
     {
         
@@ -34,16 +36,26 @@ public class Gun: MonoBehaviour
             hit.rigidbody?.AddForce(-hit.normal * fireforce);
 
             GameObject impactGO = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
+            BulletEffect(hit);
             Destroy(impactGO, 2f);
         }
 
     }
-        public void FireRate()
+
+    public void FireRate()
     {
         if (Time.time >= nextTimeToFire)
         {
             Shoot();
             nextTimeToFire = Time.time + 1f / fireRate;
         }
+    }
+
+    public void BulletEffect(RaycastHit hit)
+    {
+        GameObject impact = Instantiate(bulletEffect, hit.point, Quaternion.LookRotation(hit.normal));
+        Vector3 forwardVector = impact.transform.forward;
+        impact.transform.Translate(forwardVector * 0.01f, Space.World);
+        Destroy(impact, 10f);
     }
 }
