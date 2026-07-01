@@ -51,11 +51,23 @@ public class Gun: MonoBehaviour
         }
     }
 
-    public void BulletEffect(RaycastHit hit)
-    {
-        GameObject impact = Instantiate(bulletEffect, hit.point, Quaternion.LookRotation(hit.normal));
-        Vector3 forwardVector = impact.transform.forward;
-        impact.transform.Translate(forwardVector * 0.01f, Space.World);
-        Destroy(impact, 10f);
-    }
+public void BulletEffect(RaycastHit hit)
+{
+    GameObject impact = Instantiate(
+        bulletEffect,
+        hit.point,
+        Quaternion.LookRotation(hit.normal)
+    );
+
+    impact.transform.SetParent(hit.transform);
+
+    impact.transform.localPosition =
+        hit.transform.InverseTransformPoint(hit.point + hit.normal * 0.001f);
+
+    impact.transform.localRotation =
+        Quaternion.Inverse(hit.transform.rotation) *
+        Quaternion.LookRotation(hit.normal);
+
+    Destroy(impact, 10f);
+}
 }
