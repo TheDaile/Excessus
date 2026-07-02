@@ -100,6 +100,11 @@ public class PlayerStatsHUD : MonoBehaviour
             return;
         }
 
+        healthFill.SendToBack();
+        shieldFill.BringToFront();
+        healthMarker?.BringToFront();
+        staminaMarker?.BringToFront();
+
         isBound = true;
         ForceRefresh();
     }

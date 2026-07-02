@@ -1,22 +1,20 @@
-<ui:UXML xmlns:ui="UnityEngine.UIElements">
-    <Style src="PlayerHUD.uss" />
-
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Code/UI/PlayerHUD.uss?fileID=7433441132597879392&amp;guid=210a40f65e1294fc2ac45100b6de6072&amp;type=3#PlayerHUD"/>
     <ui:VisualElement name="player-hud" class="player-hud">
         <ui:VisualElement name="health-shield-bar" class="hud-bar hud-bar--vitals">
             <ui:VisualElement class="hud-bar__track">
                 <ui:VisualElement class="hud-bar__fill-area">
-                    <ui:VisualElement name="shield-fill" class="hud-bar__fill hud-bar__fill--shield" />
-                    <ui:VisualElement name="health-fill" class="hud-bar__fill hud-bar__fill--health" />
-                    <ui:VisualElement name="health-marker" class="hud-bar__marker" />
+                    <ui:VisualElement name="health-fill" class="hud-bar__fill hud-bar__fill--health"/>
+                    <ui:VisualElement name="shield-fill" class="hud-bar__fill hud-bar__fill--shield"/>
+                    <ui:VisualElement name="health-marker" class="hud-bar__marker"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-
         <ui:VisualElement name="stamina-bar" class="hud-bar hud-bar--stamina">
             <ui:VisualElement class="hud-bar__track">
                 <ui:VisualElement class="hud-bar__fill-area">
-                    <ui:VisualElement name="stamina-fill" class="hud-bar__fill hud-bar__fill--stamina" />
-                    <ui:VisualElement name="stamina-marker" class="hud-bar__marker" />
+                    <ui:VisualElement name="stamina-fill" class="hud-bar__fill hud-bar__fill--stamina"/>
+                    <ui:VisualElement name="stamina-marker" class="hud-bar__marker"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>

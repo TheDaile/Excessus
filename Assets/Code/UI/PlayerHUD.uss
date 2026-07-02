@@ -2,14 +2,14 @@
 .player-hud {
     --hud-track: rgba(4, 31, 29, 0.9);
     --hud-border: rgb(31, 147, 151);
-    --hud-shield: rgba(18, 108, 155, 0.8);
+    --hud-shield: rgb(35, 128, 255);
     --hud-health: rgb(205, 42, 61);
     --hud-stamina: rgb(39, 185, 73);
     --hud-marker: rgba(255, 255, 255, 0.95);
 
     position: absolute;
-    left: 32px;
-    bottom: 32px;
+    left: 16px;
+    bottom: 16px;
     flex-direction: column;
     align-items: flex-start;
 }
@@ -21,15 +21,23 @@
 }
 
 .hud-bar--vitals {
-    width: 292px;
-    height: 26px;
-    margin-bottom: 6px;
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+    margin-bottom: 8px;
 }
 
 .hud-bar--stamina {
-    width: 428px;
-    height: 22px;
-    margin-left: 14px;
+    width: 420px;
+    min-width: 420px;
+    max-width: 420px;
+    height: 30px;
+    min-height: 30px;
+    max-height: 30px;
+    margin-left: 8px;
 }
 
 /* Track */
@@ -60,10 +68,10 @@
 /* Inner fill clipping area */
 .hud-bar__track > .hud-bar__fill-area {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    right: 2px;
-    bottom: 2px;
+    top: 3px;
+    left: 3px;
+    right: 3px;
+    bottom: 3px;
     overflow: hidden;
     background-color: transparent;
 }
@@ -84,7 +92,7 @@
 
 .hud-bar__fill--shield {
     background-color: var(--hud-shield);
-    z-index: 0;
+    z-index: 2;
 }
 
 .hud-bar__fill--health {
