@@ -5,6 +5,7 @@ public class PlayerStats: MonoBehaviour, IDamageable
     [SerializeField] private Health health = new Health();
     [SerializeField] private Shield shield = new Shield();
     [SerializeField] private Stamina stamina = new Stamina();
+    [SerializeField] private float sprintStaminaCostPerSecond = 20f;
 
     private PlayerStatsEvents statsEvents;
     private StatsOperations statsOperations;
@@ -42,6 +43,18 @@ public class PlayerStats: MonoBehaviour, IDamageable
         return statsOperations.UseStamina(amount, Time.time);
     }
 
+    public bool UseSprintStamina(float deltaTime)
+    {
+        StatValidator.RequireNotNegative(deltaTime, nameof(deltaTime), "PlayerStats.UseSprintStamina");
+
+        if (deltaTime == 0f || sprintStaminaCostPerSecond <= 0f)
+        {
+            return true;
+        }
+
+        return UseStamina(sprintStaminaCostPerSecond * deltaTime);
+    }
+
     public void Heal(float amount)
     {
         statsOperations.Heal(amount);
@@ -76,4 +89,17 @@ public class PlayerStats: MonoBehaviour, IDamageable
     {
         statsOperations.IncreaseMaxShieldBy(amount, increaseCurrentByAmount);
     }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    internal bool SetSprintStaminaCostPerSecondForTests(float value)
+    {
+        if (value < 0f)
+        {
+            return false;
+        }
+
+        sprintStaminaCostPerSecond = value;
+        return true;
+    }
+#endif
 }
