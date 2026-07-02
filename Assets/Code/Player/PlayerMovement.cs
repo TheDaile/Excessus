@@ -123,14 +123,25 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump()
     {
-        if (groundedPlayer)
+        if (groundedPlayer && CanJump())
         {
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
         }
     }
 
+    private bool CanJump()
+    {
+        if (playerStats == null)
+        {
+            return false;
+        }
+
+        return playerStats.UseJumpStamina();
+    }
+
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
     internal float PlayerSpeedForTests => playerSpeed;
+    internal float VerticalVelocityForTests => playerVelocity.y;
 
     internal bool SetPlayerSpeedForTests(float value)
     {
@@ -163,6 +174,22 @@ public class PlayerMovement : MonoBehaviour
 
         gravity = value;
         return true;
+    }
+
+    internal bool SetJumpHeightForTests(float value)
+    {
+        if (value <= 0f)
+        {
+            return false;
+        }
+
+        jumpHeight = value;
+        return true;
+    }
+
+    internal void SetGroundedForTests(bool value)
+    {
+        groundedPlayer = value;
     }
 
     internal void ProcessMoveForTests(Vector2 input, float deltaTime)
