@@ -7,11 +7,13 @@ public class EnemyStats : MonoBehaviour, IDamageable
     public float CurrentHealth => health.Current;
     public float MaxHealth => health.Max;
     public bool IsDead => !health.IsAlive;
+    private EnemyStatsEvents statsEvents;
 
     private void Awake()
     {
         health.Initialize();
 
+        statsEvents = new EnemyStatsEvents(this);
     }
 
     // Update is called once per frame
