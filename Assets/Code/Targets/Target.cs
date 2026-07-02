@@ -1,19 +1,27 @@
 using UnityEngine;
 
-public class Target : MonoBehaviour
+public class Target : MonoBehaviour, IDamageable
 {
-    public float health = 50f;
+    [SerializeField] private Health health = new Health();
+    public float CurrentHealth => health.Current;
+    public float MaxHealth => health.Max;
+    public bool IsDead => !health.IsAlive;
+
+    private void Awake()
+    {
+        health.Initialize();
+    }
 
     public void TakeDamage(float amount)
     {
-        health -= amount;
-        if (health <= 0f)
+        health.TakeDamage(amount);
+        if (!health.IsAlive)
         {
             Die();
         }
     }
 
-    private void Die()
+    public void Die()
     {
         Destroy(gameObject);
     }

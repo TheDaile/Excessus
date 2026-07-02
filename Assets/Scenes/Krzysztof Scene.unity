@@ -1113,8 +1113,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7988e48a018026d4ca2ec4cdaff53c6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Excessus.Runtime::Gun
-  damage: 1
-  range: 100
+  damage: 10
+  range: 1000
   fpsCam: {fileID: 330585545}
   muzzleFlash: {fileID: 278054876}
   impactEffect: {fileID: 8876132480307443134, guid: 6bf64c0beb2f390429e5648e7bf77462, type: 3}
@@ -2168,7 +2168,7 @@ PrefabInstance:
       objectReference: {fileID: 930890602}
     - target: {fileID: 8823230286191254647, guid: 50c0ea0e45acf18469b2bc556a28a9c3, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.37
+      value: 1.46
       objectReference: {fileID: 0}
     - target: {fileID: 8823230286191254647, guid: 50c0ea0e45acf18469b2bc556a28a9c3, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2176,7 +2176,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8823230286191254647, guid: 50c0ea0e45acf18469b2bc556a28a9c3, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8823230286191254647, guid: 50c0ea0e45acf18469b2bc556a28a9c3, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2222,6 +2222,7 @@ SceneRoots:
   - {fileID: 1411051180}
   - {fileID: 1887645935}
   - {fileID: 1097349556}
+  - {fileID: 1732921874}
   - {fileID: 416925848}
   - {fileID: 596702629}
   - {fileID: 147268545}
@@ -2229,3 +2230,7 @@ SceneRoots:
   - {fileID: 1283545896}
   - {fileID: 410087041}
   - {fileID: 1939702889}
+  - {fileID: 447556650}
+  - {fileID: 1563734879}
+  - {fileID: 1731349749}
+  - {fileID: 239773766}
