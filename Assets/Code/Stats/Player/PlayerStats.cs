@@ -6,6 +6,7 @@ public class PlayerStats: MonoBehaviour, IDamageable
     [SerializeField] private Shield shield = new Shield();
     [SerializeField] private Stamina stamina = new Stamina();
     [SerializeField] private float sprintStaminaCostPerSecond = 20f;
+    [SerializeField] private float jumpStaminaCost = 20f;
 
     private PlayerStatsEvents statsEvents;
     private StatsOperations statsOperations;
@@ -55,6 +56,16 @@ public class PlayerStats: MonoBehaviour, IDamageable
         return UseStamina(sprintStaminaCostPerSecond * deltaTime);
     }
 
+    public bool UseJumpStamina()
+    {
+        if (jumpStaminaCost <= 0f)
+        {
+            return true;
+        }
+
+        return UseStamina(jumpStaminaCost);
+    }
+
     public void Heal(float amount)
     {
         statsOperations.Heal(amount);
@@ -99,6 +110,17 @@ public class PlayerStats: MonoBehaviour, IDamageable
         }
 
         sprintStaminaCostPerSecond = value;
+        return true;
+    }
+
+    internal bool SetJumpStaminaCostForTests(float value)
+    {
+        if (value < 0f)
+        {
+            return false;
+        }
+
+        jumpStaminaCost = value;
         return true;
     }
 #endif
