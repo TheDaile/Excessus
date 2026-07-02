@@ -1,9 +1,13 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerStats))]
 public class PlayerMovement : MonoBehaviour
 {
+    private const float MovementInputThreshold = 0.01f;
+
     private CharacterController controller;
+    private PlayerStats playerStats;
     private Vector3 playerVelocity;
     [SerializeField] private float playerSpeed = 5.0f;
     [SerializeField] private float sprintMultiplier = 1.5f;
@@ -18,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        playerStats = GetComponent<PlayerStats>();
     }
 
     private void Update()
@@ -61,21 +66,54 @@ public class PlayerMovement : MonoBehaviour
         Vector3 moveDirection = new Vector3(input.x, 0, input.y);
         moveDirection = transform.TransformDirection(moveDirection);
  
-        float speed = sprinting ? playerSpeed * sprintMultiplier : playerSpeed;
+        float speed = CanSprint(input, deltaTime) ? playerSpeed * sprintMultiplier : playerSpeed;
         controller.Move(moveDirection * deltaTime * speed);
 
         playerVelocity.y += gravity * deltaTime;
         controller.Move(playerVelocity * deltaTime);
     }
 
-    public void SetSprinting(bool value) => sprinting = value;
+    public void SetSprinting(bool value) => sprinting = value && !crouching;
     public void Sprint() => ToggleSprint();
     public void ToggleSprint() => SetSprinting(!sprinting);
+
+    private bool CanSprint(Vector2 input, float deltaTime)
+    {
+        if (!sprinting || crouching || !HasMovementInput(input))
+        {
+            return false;
+        }
+
+        if (deltaTime <= 0f)
+        {
+            return true;
+        }
+
+        if (playerStats == null)
+        {
+            return false;
+        }
+
+        if (playerStats.UseSprintStamina(deltaTime))
+        {
+            return true;
+        }
+
+        sprinting = false;
+        return false;
+    }
+
+    private bool HasMovementInput(Vector2 input) => input.sqrMagnitude > MovementInputThreshold * MovementInputThreshold;
 
     public void SetCrouching(bool value)
     {
         if (crouching == value) return;
         crouching = value;
+        if (crouching)
+        {
+            sprinting = false;
+        }
+
         crouchTimer = 0f;
         lerpCrouch = true;
     }

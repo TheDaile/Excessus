@@ -42,6 +42,23 @@ public class PlayerStatsTests
     }
     #endregion
 
+    #region Stamina
+    [Test]
+    public void UseSprintStamina_WhenDeltaTimeIsPositive_ShouldUseSprintStaminaCost()
+    {
+        PlayerStats playerStats = CreatePlayerStats();
+        float sprintStaminaCostPerSecond = playerStats.MaxStamina * TestValues.QuarterRatio;
+        Assert.IsTrue(playerStats.SetSprintStaminaCostPerSecondForTests(sprintStaminaCostPerSecond), "The test sprint stamina cost should be accepted.");
+
+        float startStamina = playerStats.CurrentStamina;
+
+        bool result = playerStats.UseSprintStamina(TestValues.OneSecond);
+
+        Assert.IsTrue(result, "UseSprintStamina should return true when enough stamina is available.");
+        Assert.AreEqual(startStamina - sprintStaminaCostPerSecond, playerStats.CurrentStamina, TestValues.Tolerance, "Verifies that PlayerStats owns and applies the sprint stamina cost.");
+    }
+    #endregion
+
     #region Update Integration
     [UnityTest]
     public IEnumerator HealOverTime_WhenHealthIsDamaged_ShouldRestoreCurrentHealthThroughUpdate()
