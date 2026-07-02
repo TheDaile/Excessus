@@ -1703,7 +1703,7 @@ PrefabInstance:
     - target: {fileID: -7511558181221131132, guid: 82740e85a26f8c848ab486d4f7d32ea4, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: -876546973899608171, guid: a47cfc8038eff5146b741896d8e38bdd, type: 3}
+      objectReference: {fileID: 2100000, guid: 653653e8bf8c97b42a796cdfe44d0bc0, type: 2}
     - target: {fileID: 919132149155446097, guid: 82740e85a26f8c848ab486d4f7d32ea4, type: 3}
       propertyPath: m_Name
       value: Meshy_AI_Midnight_Modular_Sofa_0702201330_texture
