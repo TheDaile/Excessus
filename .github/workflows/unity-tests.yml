@@ -25,8 +25,34 @@ jobs:
             exit 1
           fi
 
+  detect-test-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      tests_changed: ${{ steps.test_changes.outputs.tests_changed }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check test file changes
+        id: test_changes
+        shell: bash
+        run: |
+          changed_files="$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}")"
+
+          if echo "$changed_files" | grep -Eq '^Assets/Tests(/|\.meta$)'; then
+            echo "tests_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "tests_changed=false" >> "$GITHUB_OUTPUT"
+
   unity-tests:
-    needs: validate-source
+    needs:
+      - validate-source
+      - detect-test-changes
+    if: needs.detect-test-changes.outputs.tests_changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
 
