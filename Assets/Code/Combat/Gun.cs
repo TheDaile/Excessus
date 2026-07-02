@@ -12,9 +12,10 @@ public class Gun: MonoBehaviour
     public float nextTimeToFire = 0f;
 
     [SerializeField] public GameObject bulletEffect;
+    EnemyAi enemyAi;
     void Start()
     {
-        
+        enemyAi = FindFirstObjectByType<EnemyAi>();
     }
 
     public void Shoot()
@@ -26,17 +27,15 @@ public class Gun: MonoBehaviour
         {
             Debug.Log(hit.transform.name);
 
-
-            Target  target = hit.transform.GetComponent<Target>();
-            if (target != null)
-            {
-                target.TakeDamage(damage);
-            }
-
-            hit.rigidbody?.AddForce(-hit.normal * fireforce);
-
+            if (hit.collider.TryGetComponent<IDamageable>(out var damageable))
+    {
+        damageable.TakeDamage(damage);
+    }
             GameObject impactGO = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
             BulletEffect(hit);
+
+            hit.rigidbody?.AddForce(-hit.normal * fireforce);
+            
             Destroy(impactGO, 2f);
         }
 
