@@ -13,7 +13,6 @@ ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
 SHA="$(git rev-parse HEAD)"
 PUSH_DATA=""
 IS_GIT_PUSH=0
-REMOTE_SHA_FOR_DIFF=""
 
 # Podczas git push testuj commit faktycznie wysyłany.
 if (( $# > 0 )); then
@@ -35,7 +34,6 @@ if (( $# > 0 )); then
     fi
 
     SHA="$COMMIT"
-    REMOTE_SHA_FOR_DIFF="$REMOTE_SHA"
     HAS_PUSH_COMMIT=1
   done <<<"$PUSH_DATA"
 
@@ -49,38 +47,6 @@ if (( $# > 0 )); then
     echo "[PRE-PUSH] Brak commitów do przetestowania."
     exit 0
   fi
-fi
-
-changed_files_for_tests() {
-  if (( IS_GIT_PUSH )) &&
-    [[ -n "$REMOTE_SHA_FOR_DIFF" ]] &&
-    [[ "$REMOTE_SHA_FOR_DIFF" != "$ZERO" ]] &&
-    git cat-file -e "${REMOTE_SHA_FOR_DIFF}^{commit}" 2>/dev/null; then
-    git diff --name-only "$REMOTE_SHA_FOR_DIFF" "$SHA"
-    return
-  fi
-
-  if git rev-parse "${SHA}^" >/dev/null 2>&1; then
-    git diff --name-only "${SHA}^" "$SHA"
-    return
-  fi
-
-  git show --format= --name-only "$SHA"
-}
-
-if ! changed_files_for_tests | grep -Eq "$TEST_RELEVANT_PATH_PATTERN"; then
-  echo "[PRE-PUSH] Nie wykryto zmian w testach ani w kodzie objętym testami. Pomijam testy Unity."
-
-  if (( IS_GIT_PUSH )); then
-    if ! command -v git-lfs >/dev/null 2>&1; then
-      echo "[PRE-PUSH][BŁĄD LFS] Git LFS nie jest zainstalowany."
-      exit 30
-    fi
-
-    printf '%s\n' "$PUSH_DATA" | git lfs pre-push "$@"
-  fi
-
-  exit 0
 fi
 
 VERSION="$(
