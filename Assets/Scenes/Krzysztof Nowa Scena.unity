@@ -1234,6 +1234,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 046a27eaa1538a74da808da5cfd6c723, type: 2}
     - target: {fileID: 919132149155446097, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
       propertyPath: m_Name
       value: Kwiatek_4
@@ -1302,6 +1306,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 046a27eaa1538a74da808da5cfd6c723, type: 2}
     - target: {fileID: 919132149155446097, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
       propertyPath: m_Name
       value: Kwiatek_2
@@ -1497,6 +1505,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 046a27eaa1538a74da808da5cfd6c723, type: 2}
     - target: {fileID: 919132149155446097, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
       propertyPath: m_Name
       value: Kwiatek_3
@@ -2874,6 +2886,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 046a27eaa1538a74da808da5cfd6c723, type: 2}
     - target: {fileID: 919132149155446097, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
       propertyPath: m_Name
       value: Kwiatek_6
@@ -3578,7 +3594,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0f8e9dea32080b149a90702a87fe4e7d, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0f8e9dea32080b149a90702a87fe4e7d, type: 3}
       propertyPath: m_StaticEditorFlags
@@ -4202,6 +4218,10 @@ PrefabInstance:
       propertyPath: ySensitivity
       value: 10
       objectReference: {fileID: 0}
+    - target: {fileID: 3856374997994588522, guid: 28c2618d777bf804e9e8da3e2186be5a, type: 3}
+      propertyPath: stamina.maxStamina
+      value: 10000
+      objectReference: {fileID: 0}
     - target: {fileID: 3920637993504904219, guid: 28c2618d777bf804e9e8da3e2186be5a, type: 3}
       propertyPath: playerHUD
       value: 
@@ -4331,6 +4351,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: -7511558181221131132, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 046a27eaa1538a74da808da5cfd6c723, type: 2}
     - target: {fileID: 919132149155446097, guid: 01be9cd7cd605ec42bec5eb17bb6db9e, type: 3}
       propertyPath: m_Name
       value: Kwiatek_5
@@ -4522,7 +4546,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0f8e9dea32080b149a90702a87fe4e7d, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0f8e9dea32080b149a90702a87fe4e7d, type: 3}
       propertyPath: m_StaticEditorFlags
