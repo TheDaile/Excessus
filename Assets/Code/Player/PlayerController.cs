@@ -71,21 +71,17 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
+        playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
+        playerInteract.CheckForInteractable();
+        
         if (playerActions.Attack.ReadValue<float>() > 0f)
         {
             gun.FireRate();
         }
     }
 
-   private void FixedUpdate()
-    {
-        playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
-    }
-   private void LateUpdate()
-    {
-        playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
-        playerInteract.CheckForInteractable();
-    }
+
     private void OnEnable() => playerActions.Enable();
     private void OnDisable() =>  playerActions.Disable();
 

@@ -67,6 +67,6 @@ public void BulletEffect(RaycastHit hit)
         Quaternion.Inverse(hit.transform.rotation) *
         Quaternion.LookRotation(hit.normal);
 
-    Destroy(impact, 10f);
-}
+   // Destroy(impact, 10f);
+    }
 }
