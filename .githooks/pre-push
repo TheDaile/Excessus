@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 TIMEOUT="${UNITY_TEST_TIMEOUT:-1200}"
 ZERO="0000000000000000000000000000000000000000"
+TEST_RELEVANT_PATH_PATTERN='^(Assets/Tests(/|\.meta$)|Assets/Code/(Stats|Player|Interactable)(/|\.meta$)|Assets/Code/Managers/PlayerHUD\.cs(\.meta)?$|Assets/Code/(AssemblyInfo\.cs|Excessus\.Runtime\.asmdef)(\.meta)?$|Packages/(manifest|packages-lock)\.json$)'
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
   echo "[PRE-PUSH][BŁĄD] Hook musi być uruchomiony wewnątrz repozytorium Git."
