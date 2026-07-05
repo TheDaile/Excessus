@@ -1,0 +1,171 @@
+#pragma kernel CullAndAppend
+#pragma only_renderers metal vulkan d3d11
+
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
+Texture2DArray<float4> _ColorAtlas;
+Texture2DArray<float> _RadialDepthAtlas;
+
+struct SplatData
+{
+    float3 position;
+    uint packedColor;
+    uint packedTexel;
+    float chebyshevDepth;
+};
+
+AppendStructuredBuffer<SplatData> _SplatBuffer;
+
+float3 _ProbeOrigin;
+float4 _ProbeNearFar;
+float4x4 _FaceInverseViewProjections[6];
+int _ProbeResolution;
+uint _CapturedFaceMask;
+
+float4x4 _MainView;
+float4x4 _MainViewProjection;
+float4 _CameraNearFar;
+float _MaximumDrawDistance;
+float _FrustumPadding;
+float _ContinuousDepthThreshold;
+int _ColorSteps;
+
+float3 FaceUvToRay(uint face, float2 uv)
+{
+    #if UNITY_REVERSED_Z
+        float nearDeviceDepth = 1.0;
+    #else
+        float nearDeviceDepth = UNITY_NEAR_CLIP_VALUE;
+    #endif
+
+    float3 nearPosition = ComputeWorldSpacePosition(
+        uv,
+        nearDeviceDepth,
+        _FaceInverseViewProjections[face]);
+    return nearPosition - _ProbeOrigin;
+}
+
+bool HasContinuousNeighbour(
+    int2 pixel,
+    uint face,
+    float centerDepth,
+    int2 offset)
+{
+    int2 neighbour = pixel + offset;
+    bool isContinuous = false;
+
+    if (!any(neighbour < 0) && !any(neighbour >= _ProbeResolution))
+    {
+        float neighbourDepth =
+            _RadialDepthAtlas.Load(int4(neighbour, face, 0));
+
+        if (neighbourDepth < 0.999999)
+        {
+            float denominator =
+                max(max(centerDepth, neighbourDepth), 0.000001);
+            isContinuous =
+                abs(centerDepth - neighbourDepth) / denominator <
+                _ContinuousDepthThreshold;
+        }
+    }
+
+    return isContinuous;
+}
+
+uint PackColor(float4 color)
+{
+    uint4 rgba = (uint4)round(saturate(color) * 255.0);
+    return rgba.x | (rgba.y << 8) | (rgba.z << 16) | (rgba.w << 24);
+}
+
+[numthreads(8, 8, 1)]
+void CullAndAppend(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)_ProbeResolution ||
+        id.y >= (uint)_ProbeResolution ||
+        id.z >= 6u)
+    {
+        return;
+    }
+
+    uint face = id.z;
+    if ((_CapturedFaceMask & (1u << face)) == 0u)
+        return;
+
+    int2 pixel = int2(id.xy);
+    float radialDepth = _RadialDepthAtlas.Load(int4(pixel, face, 0));
+    if (radialDepth >= 0.999999)
+        return;
+
+    float chebyshevDepth = lerp(
+        _ProbeNearFar.x,
+        _ProbeNearFar.y,
+        radialDepth);
+    float2 uv = (float2(id.xy) + 0.5) / (float)_ProbeResolution;
+    float3 rawDirection = FaceUvToRay(face, uv);
+    float maximumComponent = max(
+        abs(rawDirection.x),
+        max(abs(rawDirection.y), abs(rawDirection.z)));
+    float3 worldPosition =
+        _ProbeOrigin + rawDirection * (chebyshevDepth / maximumComponent);
+
+    float4 viewPosition = mul(_MainView, float4(worldPosition, 1.0));
+    float viewDepth = -viewPosition.z;
+    if (viewDepth < _CameraNearFar.x ||
+        viewDepth > min(_CameraNearFar.y, _MaximumDrawDistance))
+    {
+        return;
+    }
+
+    float4 clipPosition =
+        mul(_MainViewProjection, float4(worldPosition, 1.0));
+    if (clipPosition.w <= 0.0)
+        return;
+
+    float paddedW = clipPosition.w * (1.0 + _FrustumPadding);
+    if (abs(clipPosition.x) > paddedW ||
+        abs(clipPosition.y) > paddedW)
+    {
+        return;
+    }
+
+    uint edgeMask = 0;
+    edgeMask |= HasContinuousNeighbour(
+        pixel,
+        face,
+        radialDepth,
+        int2(-1, 0)) ? 1u : 0u;
+    edgeMask |= HasContinuousNeighbour(
+        pixel,
+        face,
+        radialDepth,
+        int2(1, 0)) ? 2u : 0u;
+    edgeMask |= HasContinuousNeighbour(
+        pixel,
+        face,
+        radialDepth,
+        int2(0, -1)) ? 4u : 0u;
+    edgeMask |= HasContinuousNeighbour(
+        pixel,
+        face,
+        radialDepth,
+        int2(0, 1)) ? 8u : 0u;
+
+    float4 color = _ColorAtlas.Load(int4(pixel, face, 0));
+    float steps = max((float)_ColorSteps, 2.0);
+    color.rgb = floor(saturate(color.rgb) * steps + 0.5) / steps;
+    color.a = 1.0;
+
+    uint packedTexel =
+        id.x |
+        (id.y << 10) |
+        (face << 20) |
+        (edgeMask << 23);
+
+    SplatData splat;
+    splat.position = worldPosition;
+    splat.packedColor = PackColor(color);
+    splat.packedTexel = packedTexel;
+    splat.chebyshevDepth = chebyshevDepth;
+    _SplatBuffer.Append(splat);
+}
