@@ -67,5 +67,5 @@
         "*.sln": "*.csproj",
         "*.slnx": "*.csproj"
     },
-    "dotnet.defaultSolution": "Excessus.slnx"
+    "dotnet.defaultSolution": "Excessus — kopia.slnx"
 }
