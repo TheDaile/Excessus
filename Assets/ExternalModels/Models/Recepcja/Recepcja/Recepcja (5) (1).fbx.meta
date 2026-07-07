@@ -1,19 +1,9 @@
 fileFormatVersion: 2
-guid: 58f7c2df4cdc3254d9f9370ed82e149e
+guid: 2ac58b1da89684d488cb12c02b329a42
 ModelImporter:
   serializedVersion: 24300
   internalIDToNameTable: []
-  externalObjects:
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: "Pod\u0142oga"
-    second: {fileID: 2100000, guid: 69287b88b84d58b478565fe12889ac86, type: 2}
-  - first:
-      type: UnityEngine:Material
-      assembly: UnityEngine.CoreModule
-      name: "\u015Aciana"
-    second: {fileID: 2100000, guid: 177068c725775e841ad786940e8b9d3b, type: 2}
+  externalObjects: {}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -57,7 +47,7 @@ ModelImporter:
     nodeNameCollisionStrategy: 1
     fileIdsGeneration: 2
     swapUVChannels: 0
-    generateSecondaryUV: 1
+    generateSecondaryUV: 0
     useFileUnits: 1
     keepQuads: 0
     weldVertices: 1
