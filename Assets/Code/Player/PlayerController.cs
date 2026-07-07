@@ -12,8 +12,12 @@ public class PlayerController : MonoBehaviour
     private PlayerMovement playerMovement;
     private PlayerLook playerLook;
     private PlayerInteract playerInteract;
+    private Gun gun;
     void Awake()
     {
+        
+        gun = GetComponentInChildren<Gun>();
+
         playerInput = new PlayerInput();
         playerActions = playerInput.Player;
 
@@ -65,15 +69,21 @@ public class PlayerController : MonoBehaviour
 
     }
 
-   private void FixedUpdate()
+    private void Update()
     {
         playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
-    }
-   private void LateUpdate()
-    {
         playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
         playerInteract.CheckForInteractable();
+        
+        if (playerActions.Attack.ReadValue<float>() > 0f)
+        {
+            gun.FireRate();
+        }
     }
+
+
     private void OnEnable() => playerActions.Enable();
     private void OnDisable() =>  playerActions.Disable();
+
+    
 }
