@@ -1,8 +1,10 @@
+using Unity.Netcode;
 using UnityEngine;
 
+[RequireComponent(typeof(NetworkObject))]
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerStats))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     private const float MovementInputThreshold = 0.01f;
 
@@ -27,6 +29,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
+        if (!CanUseMovement())
+        {
+            return;
+        }
+
         if (lerpCrouch)
         {
             crouchTimer += Time.deltaTime;
@@ -55,6 +62,11 @@ public class PlayerMovement : MonoBehaviour
 
     private void ProcessMove(Vector2 input, float deltaTime)
     {
+        if (!CanUseMovement())
+        {
+            return;
+        }
+
         groundedPlayer = controller.isGrounded;
 
         if (groundedPlayer && playerVelocity.y < 0)
@@ -73,7 +85,16 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(playerVelocity * deltaTime);
     }
 
-    public void SetSprinting(bool value) => sprinting = value && !crouching;
+    public void SetSprinting(bool value)
+    {
+        if (!CanUseMovement())
+        {
+            return;
+        }
+
+        sprinting = value && !crouching;
+    }
+
     public void Sprint() => ToggleSprint();
     public void ToggleSprint() => SetSprinting(!sprinting);
 
@@ -107,6 +128,11 @@ public class PlayerMovement : MonoBehaviour
 
     public void SetCrouching(bool value)
     {
+        if (!CanUseMovement())
+        {
+            return;
+        }
+
         if (crouching == value) return;
         crouching = value;
         if (crouching)
@@ -123,10 +149,25 @@ public class PlayerMovement : MonoBehaviour
 
     public void Jump()
     {
+        if (!CanUseMovement())
+        {
+            return;
+        }
+
         if (groundedPlayer && CanJump())
         {
             playerVelocity.y = Mathf.Sqrt(jumpHeight * -3.0f * gravity);
         }
+    }
+
+    private bool CanUseMovement()
+    {
+        if (IsSpawned)
+        {
+            return IsOwner;
+        }
+
+        return Unity.Netcode.NetworkManager.Singleton == null || !HasNetworkObject;
     }
 
     private bool CanJump()
