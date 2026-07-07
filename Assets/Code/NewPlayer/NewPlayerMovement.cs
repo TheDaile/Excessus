@@ -77,10 +77,12 @@ public class NewPlayerMovement : MonoBehaviour
     private bool hasInputYParameter;
     private bool hasJumpingParameter;
     private bool hasLandingParameter;
+    private Transform animatedHips;
 
     private void Awake()
     {
         ResolveAnimatorReferences();
+        ResolveAnimatedHips();
         ConfigureAnimator();
     }
 
@@ -93,6 +95,11 @@ public class NewPlayerMovement : MonoBehaviour
         isGrounded = Mathf.Abs(physicalHips.linearVelocity.y) < 0.05f;
 
         ApplyPhysicalMovement(Time.fixedDeltaTime);
+        SyncAnimatedTarget();
+    }
+
+    private void LateUpdate()
+    {
         SyncAnimatedTarget();
     }
 
@@ -186,7 +193,7 @@ public class NewPlayerMovement : MonoBehaviour
 
         if (inputDirection.sqrMagnitude > MovementInputThreshold * MovementInputThreshold)
         {
-            Quaternion targetRotation = Quaternion.LookRotation(inputDirection, Vector3.up);
+            Quaternion targetRotation = Quaternion.Euler(0, movementReference.eulerAngles.y, 0);
             Quaternion nextRotation = Quaternion.Slerp(
                 physicalHips.rotation,
                 targetRotation,
@@ -229,8 +236,25 @@ public class NewPlayerMovement : MonoBehaviour
             return;
         }
 
-        animatedTargetRoot.position = physicalHips.position;
-        animatedTargetRoot.rotation = physicalHips.rotation;
+        if (animatedHips == null)
+        {
+            ResolveAnimatedHips();
+        }
+
+        if (animatedHips == null)
+        {
+            animatedTargetRoot.SetPositionAndRotation(physicalHips.position, physicalHips.rotation);
+            return;
+        }
+
+        Quaternion hipsRotationRelativeToRoot = Quaternion.Inverse(animatedTargetRoot.rotation) * animatedHips.rotation;
+        Vector3 hipsPositionRelativeToRoot = Quaternion.Inverse(animatedTargetRoot.rotation) *
+            (animatedHips.position - animatedTargetRoot.position);
+
+        Quaternion targetRootRotation = physicalHips.rotation * Quaternion.Inverse(hipsRotationRelativeToRoot);
+        Vector3 targetRootPosition = physicalHips.position - targetRootRotation * hipsPositionRelativeToRoot;
+
+        animatedTargetRoot.SetPositionAndRotation(targetRootPosition, targetRootRotation);
     }
 
     private void ResolveAnimatorReferences()
@@ -244,6 +268,36 @@ public class NewPlayerMovement : MonoBehaviour
         {
             animatedTargetRoot = targetAnimator.transform;
         }
+    }
+
+    private void ResolveAnimatedHips()
+    {
+        if (animatedTargetRoot == null)
+        {
+            return;
+        }
+
+        animatedHips = FindChildByName(animatedTargetRoot, "Hips");
+    }
+
+    private Transform FindChildByName(Transform root, string childName)
+    {
+        if (root.name == childName)
+        {
+            return root;
+        }
+
+        foreach (Transform child in root)
+        {
+            Transform result = FindChildByName(child, childName);
+
+            if (result != null)
+            {
+                return result;
+            }
+        }
+
+        return null;
     }
 
     private void ConfigureAnimator()

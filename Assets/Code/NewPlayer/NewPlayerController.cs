@@ -3,13 +3,11 @@ using UnityEngine.InputSystem;
 
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NewPlayerMovement))]
-[RequireComponent(typeof(NewPlayerLook))]
 public class NewPlayerController : MonoBehaviour
 {
     private global::PlayerInput playerInput;
     private global::PlayerInput.PlayerActions playerActions;
     private NewPlayerMovement playerMovement;
-    private NewPlayerLook playerLook;
 
     private void Awake()
     {
@@ -17,7 +15,6 @@ public class NewPlayerController : MonoBehaviour
         playerActions = playerInput.Player;
 
         playerMovement = GetComponent<NewPlayerMovement>();
-        playerLook = GetComponent<NewPlayerLook>();
 
         playerActions.Jump.performed += OnJump;
         playerActions.Sprint.performed += OnSprintPerformed;
@@ -27,7 +24,6 @@ public class NewPlayerController : MonoBehaviour
     private void Update()
     {
         playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
-        playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
     }
 
     private void OnEnable()
