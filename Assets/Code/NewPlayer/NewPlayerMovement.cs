@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -10,54 +9,11 @@ public class NewPlayerMovement : MonoBehaviour
     private const string JumpingParameter = "isJumping";
     private const string LandingParameter = "isLanding";
 
-    private struct BoneMapping
-    {
-        public string humanName;
-        public string boneName;
-
-        public BoneMapping(string humanName, string boneName)
-        {
-            this.humanName = humanName;
-            this.boneName = boneName;
-        }
-    }
-
-    private static readonly BoneMapping[] HumanBoneMappings =
-    {
-        new BoneMapping("Hips", "Hips"),
-        new BoneMapping("LeftUpperLeg", "LeftUpLeg"),
-        new BoneMapping("RightUpperLeg", "RightUpLeg"),
-        new BoneMapping("LeftLowerLeg", "LeftLeg"),
-        new BoneMapping("RightLowerLeg", "RightLeg"),
-        new BoneMapping("LeftFoot", "LeftFoot"),
-        new BoneMapping("RightFoot", "RightFoot"),
-        new BoneMapping("Spine", "Spine"),
-        new BoneMapping("Chest", "Spine1"),
-        new BoneMapping("UpperChest", "Spine2"),
-        new BoneMapping("Neck", "Neck"),
-        new BoneMapping("Head", "Head"),
-        new BoneMapping("LeftShoulder", "LeftShoulder"),
-        new BoneMapping("RightShoulder", "RightShoulder"),
-        new BoneMapping("LeftUpperArm", "LeftArm"),
-        new BoneMapping("RightUpperArm", "RightArm"),
-        new BoneMapping("LeftLowerArm", "LeftForeArm"),
-        new BoneMapping("RightLowerArm", "RightForeArm"),
-        new BoneMapping("LeftHand", "LeftHand"),
-        new BoneMapping("RightHand", "RightHand"),
-        new BoneMapping("LeftToes", "LeftToeBase"),
-        new BoneMapping("RightToes", "RightToeBase"),
-        new BoneMapping("Left Index Proximal", "LeftHandIndex1"),
-        new BoneMapping("Left Index Intermediate", "LeftHandIndex2"),
-        new BoneMapping("Left Index Distal", "LeftHandIndex3"),
-        new BoneMapping("Right Index Proximal", "RightHandIndex1"),
-        new BoneMapping("Right Index Intermediate", "RightHandIndex2"),
-        new BoneMapping("Right Index Distal", "RightHandIndex3")
-    };
-
     [Header("Powiazane obiekty")]
     [SerializeField] private Transform animatedTargetRoot;
     [SerializeField] private Rigidbody physicalHips;
     [SerializeField] private Animator targetAnimator;
+    [SerializeField] private Avatar playerAvatar;
     [SerializeField] private Transform movementReference;
 
     [Header("Ustawienia ruchu")]
@@ -78,6 +34,19 @@ public class NewPlayerMovement : MonoBehaviour
     private bool hasJumpingParameter;
     private bool hasLandingParameter;
     private Transform animatedHips;
+    private bool hasDesiredBodyYaw;
+    private float desiredBodyYaw;
+    private bool hasMovementYaw;
+    private float movementYaw;
+    private bool hasAnimatorInputOverride;
+    private Vector2 animatorInputOverride;
+
+    public Transform AnimatedTargetRoot => animatedTargetRoot;
+    public Rigidbody PhysicalHips => physicalHips;
+    public Animator TargetAnimator => targetAnimator;
+    public Vector2 MoveInput => moveInput;
+    public float BodyYaw => physicalHips != null ? physicalHips.rotation.eulerAngles.y : transform.eulerAngles.y;
+    public bool HasMoveInput => moveInput.sqrMagnitude > MovementInputThreshold * MovementInputThreshold;
 
     private void Awake()
     {
@@ -125,7 +94,7 @@ public class NewPlayerMovement : MonoBehaviour
             }
             else if (moveInput.y < -MovementInputThreshold)
             {
-                targetInputY = -0.5f;
+                targetInputY = sprinting ? -1f : -0.5f;
             }
             else
             {
@@ -135,6 +104,12 @@ public class NewPlayerMovement : MonoBehaviour
             if (Mathf.Abs(moveInput.x) > MovementInputThreshold && !sprinting)
             {
                 targetInputX = Mathf.Sign(moveInput.x) * 0.5f;
+            }
+
+            if (hasAnimatorInputOverride)
+            {
+                targetInputX = animatorInputOverride.x;
+                targetInputY = animatorInputOverride.y;
             }
 
             if (hasInputXParameter)
@@ -154,6 +129,30 @@ public class NewPlayerMovement : MonoBehaviour
         sprinting = value;
     }
 
+    public void SetDesiredBodyYaw(float yaw)
+    {
+        desiredBodyYaw = NormalizeAngle360(yaw);
+        hasDesiredBodyYaw = true;
+    }
+
+    public void SetMovementYaw(float yaw)
+    {
+        movementYaw = NormalizeAngle360(yaw);
+        hasMovementYaw = true;
+    }
+
+    public void SetAnimatorInputOverride(Vector2 input)
+    {
+        animatorInputOverride = Vector2.ClampMagnitude(input, 1f);
+        hasAnimatorInputOverride = true;
+    }
+
+    public void ClearAnimatorInputOverride()
+    {
+        hasAnimatorInputOverride = false;
+        animatorInputOverride = Vector2.zero;
+    }
+
     public void ToggleSprint() => SetSprinting(!sprinting);
 
     public void Jump()
@@ -167,7 +166,7 @@ public class NewPlayerMovement : MonoBehaviour
     private void ApplyPhysicalMovement(float deltaTime)
     {
         Vector3 inputDirection = GetWorldInputDirection();
-        float speed = (sprinting && moveInput.y > MovementInputThreshold) ? moveSpeed * sprintMultiplier : moveSpeed;
+        float speed = (sprinting && Mathf.Abs(moveInput.y) > MovementInputThreshold) ? moveSpeed * sprintMultiplier : moveSpeed;
         Vector3 targetVelocity = inputDirection * speed;
         Vector3 currentVelocity = physicalHips.linearVelocity;
 
@@ -191,13 +190,15 @@ public class NewPlayerMovement : MonoBehaviour
             SetAnimatorJumpState(!isGrounded, isGrounded);
         }
 
-        if (inputDirection.sqrMagnitude > MovementInputThreshold * MovementInputThreshold)
+        float yawDelta = Mathf.Abs(Mathf.DeltaAngle(physicalHips.rotation.eulerAngles.y, GetBodyYaw()));
+
+        if (inputDirection.sqrMagnitude > MovementInputThreshold * MovementInputThreshold || yawDelta > 0.5f)
         {
-            Quaternion targetRotation = Quaternion.Euler(0, movementReference.eulerAngles.y, 0);
-            Quaternion nextRotation = Quaternion.Slerp(
+            Quaternion targetRotation = Quaternion.Euler(0f, GetBodyYaw(), 0f);
+            Quaternion nextRotation = Quaternion.RotateTowards(
                 physicalHips.rotation,
                 targetRotation,
-                deltaTime * turnSpeed
+                turnSpeed * 90f * deltaTime
             );
             physicalHips.MoveRotation(nextRotation);
         }
@@ -212,21 +213,37 @@ public class NewPlayerMovement : MonoBehaviour
             return Vector3.zero;
         }
 
-        Transform reference = movementReference != null ? movementReference : transform;
-        Vector3 forward = Vector3.ProjectOnPlane(reference.forward, Vector3.up);
-        Vector3 right = Vector3.ProjectOnPlane(reference.right, Vector3.up);
+        Quaternion referenceRotation = Quaternion.Euler(0f, GetMovementYaw(), 0f);
+        Vector3 forward = referenceRotation * Vector3.forward;
+        Vector3 right = referenceRotation * Vector3.right;
 
-        if (forward.sqrMagnitude < 0.0001f)
+        return (right * moveInput.x + forward * moveInput.y).normalized;
+    }
+
+    private float GetBodyYaw()
+    {
+        if (hasDesiredBodyYaw)
         {
-            forward = Vector3.forward;
+            return desiredBodyYaw;
         }
 
-        if (right.sqrMagnitude < 0.0001f)
+        return movementReference != null ? movementReference.eulerAngles.y : BodyYaw;
+    }
+
+    private float GetMovementYaw()
+    {
+        if (hasMovementYaw)
         {
-            right = Vector3.right;
+            return movementYaw;
         }
 
-        return (right.normalized * moveInput.x + forward.normalized * moveInput.y).normalized;
+        return movementReference != null ? movementReference.eulerAngles.y : BodyYaw;
+    }
+
+    private static float NormalizeAngle360(float angle)
+    {
+        angle %= 360f;
+        return angle < 0f ? angle + 360f : angle;
     }
 
     private void SyncAnimatedTarget()
@@ -311,8 +328,20 @@ public class NewPlayerMovement : MonoBehaviour
         targetAnimator.updateMode = AnimatorUpdateMode.Fixed;
         targetAnimator.applyRootMotion = false;
 
-        RebuildRuntimeAvatar();
+        ApplyConfiguredAvatar();
         CacheAnimatorParameters();
+    }
+
+    private void ApplyConfiguredAvatar()
+    {
+        if (playerAvatar == null || targetAnimator.avatar == playerAvatar)
+        {
+            return;
+        }
+
+        targetAnimator.avatar = playerAvatar;
+        targetAnimator.Rebind();
+        targetAnimator.Update(0f);
     }
 
     private void CacheAnimatorParameters()
@@ -359,97 +388,4 @@ public class NewPlayerMovement : MonoBehaviour
         }
     }
 
-    private void RebuildRuntimeAvatar()
-    {
-        if (animatedTargetRoot == null)
-        {
-            return;
-        }
-
-        HumanDescription description = new HumanDescription
-        {
-            human = BuildHumanBones(),
-            skeleton = BuildSkeletonBones(),
-            upperArmTwist = 0.5f,
-            lowerArmTwist = 0.5f,
-            upperLegTwist = 0.5f,
-            lowerLegTwist = 0.5f,
-            armStretch = 0.05f,
-            legStretch = 0.05f,
-            feetSpacing = 0f,
-            hasTranslationDoF = false
-        };
-
-        Avatar runtimeAvatar = AvatarBuilder.BuildHumanAvatar(animatedTargetRoot.gameObject, description);
-
-        if (runtimeAvatar == null || !runtimeAvatar.isValid || !runtimeAvatar.isHuman)
-        {
-            Debug.LogError("Runtime humanoid avatar could not be built for animated target.", this);
-            return;
-        }
-
-        runtimeAvatar.name = animatedTargetRoot.name + "_RuntimeAvatar";
-        targetAnimator.avatar = runtimeAvatar;
-        targetAnimator.Rebind();
-        targetAnimator.Update(0f);
-    }
-
-    private HumanBone[] BuildHumanBones()
-    {
-        Dictionary<string, Transform> targetBones = BuildTargetBoneLookup();
-        List<HumanBone> humanBones = new List<HumanBone>(HumanBoneMappings.Length);
-
-        foreach (BoneMapping mapping in HumanBoneMappings)
-        {
-            if (!targetBones.ContainsKey(mapping.boneName))
-            {
-                Debug.LogWarning("Missing humanoid bone on animated target: " + mapping.boneName, this);
-                continue;
-            }
-
-            humanBones.Add(new HumanBone
-            {
-                humanName = mapping.humanName,
-                boneName = mapping.boneName,
-                limit = new HumanLimit { useDefaultValues = true }
-            });
-        }
-
-        return humanBones.ToArray();
-    }
-
-    private Dictionary<string, Transform> BuildTargetBoneLookup()
-    {
-        Transform[] transforms = animatedTargetRoot.GetComponentsInChildren<Transform>(true);
-        Dictionary<string, Transform> targetBones = new Dictionary<string, Transform>(transforms.Length);
-
-        foreach (Transform targetBone in transforms)
-        {
-            if (!targetBones.ContainsKey(targetBone.name))
-            {
-                targetBones.Add(targetBone.name, targetBone);
-            }
-        }
-
-        return targetBones;
-    }
-
-    private SkeletonBone[] BuildSkeletonBones()
-    {
-        Transform[] transforms = animatedTargetRoot.GetComponentsInChildren<Transform>(true);
-        List<SkeletonBone> skeletonBones = new List<SkeletonBone>(transforms.Length);
-
-        foreach (Transform targetBone in transforms)
-        {
-            skeletonBones.Add(new SkeletonBone
-            {
-                name = targetBone.name,
-                position = targetBone.localPosition,
-                rotation = targetBone.localRotation,
-                scale = targetBone.localScale
-            });
-        }
-
-        return skeletonBones.ToArray();
-    }
 }

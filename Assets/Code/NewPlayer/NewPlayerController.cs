@@ -1,13 +1,16 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+[DefaultExecutionOrder(100)]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(NewPlayerMovement))]
+[RequireComponent(typeof(NewPlayerViewBodyController))]
 public class NewPlayerController : MonoBehaviour
 {
     private global::PlayerInput playerInput;
     private global::PlayerInput.PlayerActions playerActions;
     private NewPlayerMovement playerMovement;
+    private NewPlayerViewBodyController viewBodyController;
 
     private void Awake()
     {
@@ -15,6 +18,7 @@ public class NewPlayerController : MonoBehaviour
         playerActions = playerInput.Player;
 
         playerMovement = GetComponent<NewPlayerMovement>();
+        viewBodyController = GetComponent<NewPlayerViewBodyController>();
 
         playerActions.Jump.performed += OnJump;
         playerActions.Sprint.performed += OnSprintPerformed;
@@ -23,7 +27,12 @@ public class NewPlayerController : MonoBehaviour
 
     private void Update()
     {
-        playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
+        Vector2 lookInput = playerActions.Look.ReadValue<Vector2>();
+        Vector2 moveInput = playerActions.Move.ReadValue<Vector2>();
+
+        viewBodyController.ProcessLook(lookInput);
+        playerMovement.ProcessMove(moveInput);
+        viewBodyController.RefreshBodyTurn(Time.deltaTime);
     }
 
     private void OnEnable()

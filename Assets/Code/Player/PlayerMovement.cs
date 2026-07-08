@@ -4,11 +4,13 @@ using UnityEngine;
 [RequireComponent(typeof(NetworkObject))]
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerStats))]
+[RequireComponent(typeof(Animator))]
 public class PlayerMovement : NetworkBehaviour
 {
     private const float MovementInputThreshold = 0.01f;
 
     private CharacterController controller;
+    private Animator animator;
     private PlayerStats playerStats;
     private Vector3 playerVelocity;
     [SerializeField] private float playerSpeed = 5.0f;
@@ -21,10 +23,19 @@ public class PlayerMovement : NetworkBehaviour
     private bool lerpCrouch = false;    
     private float crouchTimer = 0f;
 
+    // Animator
+    private static readonly int InputX = Animator.StringToHash("InputX");
+    private static readonly int InputY = Animator.StringToHash("InputY");
+    private static readonly int IsJumping = Animator.StringToHash("isJumping");
+    private static readonly int IsLanding = Animator.StringToHash("isLanding"); 
+    [SerializeField] private float animatorDampTime = 0.1f;
+
+
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
         playerStats = GetComponent<PlayerStats>();
+        animator = GetComponent<Animator>();
     }
 
     private void Update()
@@ -83,6 +94,8 @@ public class PlayerMovement : NetworkBehaviour
 
         playerVelocity.y += gravity * deltaTime;
         controller.Move(playerVelocity * deltaTime);
+
+        UpdateAnimator(input);
     }
 
     public void SetSprinting(bool value)
@@ -180,6 +193,13 @@ public class PlayerMovement : NetworkBehaviour
         return playerStats.UseJumpStamina();
     }
 
+    // Animator Functions
+    private void UpdateAnimator(Vector2 input)
+    {
+        animator.SetFloat(InputX, input.x, animatorDampTime, Time.deltaTime);
+        animator.SetFloat(InputY, input.y, animatorDampTime, Time.deltaTime);
+    }
+    
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
     internal float PlayerSpeedForTests => playerSpeed;
     internal float VerticalVelocityForTests => playerVelocity.y;

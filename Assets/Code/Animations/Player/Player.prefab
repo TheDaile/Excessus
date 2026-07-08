@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 5275432668643539355}
   - component: {fileID: 1030824148742457945}
   - component: {fileID: 3369946693191537066}
+  - component: {fileID: 6123456789012345678}
   - component: {fileID: 3167736714109769144}
   m_Layer: 0
   m_Name: Player
@@ -51,10 +52,11 @@ MonoBehaviour:
   animatedTargetRoot: {fileID: 6803356177066303386}
   physicalHips: {fileID: 180498602573282958}
   targetAnimator: {fileID: 777000000000000001}
+  playerAvatar: {fileID: 9000000, guid: 78b15a9993fcd41c69930547a74087d9, type: 2}
   movementReference: {fileID: 0}
   moveSpeed: 5
   sprintMultiplier: 1.5
-  turnSpeed: 10
+  turnSpeed: 14
   jumpVelocity: 5
   animatorDampTime: 0.1
 --- !u!114 &3369946693191537066
@@ -69,6 +71,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b82571075934927b8035d13844f2c8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Excessus.Runtime::NewPlayerController
+--- !u!114 &6123456789012345678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8612692490794271123}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9a74f9fcbdc44e0eb8f3227cb2349e67, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Excessus.Runtime::NewPlayerViewBodyController
+  movement: {fileID: 1030824148742457945}
+  targetAnimator: {fileID: 777000000000000001}
+  cameraReference: {fileID: 0}
+  cameraReferenceName: PlayerCamera
+  mouseYawSensitivity: 0.12
+  invertCameraYaw: 1
+  turnStartAngle: 35
+  turnStopAngle: 6
+  bodyTurnSpeed: 540
+  animatorTurnDampTime: 0.05
 --- !u!114 &3167736714109769144
 MonoBehaviour:
   m_ObjectHideFlags: 0
