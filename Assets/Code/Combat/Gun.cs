@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Gun: MonoBehaviour
+public class Gun : MonoBehaviour
 {
     public float damage = 10f;
     public float range = 100f;
@@ -11,7 +11,7 @@ public class Gun: MonoBehaviour
     public float fireRate = 15f;
     public float nextTimeToFire = 0f;
 
-    [SerializeField] public GameObject bulletEffect;
+    //[SerializeField] public GameObject bulletEffect;
     EnemyAi enemyAi;
     void Start()
     {
@@ -28,14 +28,20 @@ public class Gun: MonoBehaviour
             Debug.Log(hit.transform.name);
 
             if (hit.collider.TryGetComponent<IDamageable>(out var damageable))
-    {
-        damageable.TakeDamage(damage);
-    }
+            {
+                damageable.TakeDamage(damage);
+            }
+
+            if (hit.collider.GetComponent("Butelka") != null)
+            {
+                hit.collider.gameObject.SendMessage("Explosion", SendMessageOptions.DontRequireReceiver);
+            }
+
             GameObject impactGO = Instantiate(impactEffect, hit.point, Quaternion.LookRotation(hit.normal));
-            BulletEffect(hit);
+            //BulletEffect(hit);
 
             hit.rigidbody?.AddForce(-hit.normal * fireforce);
-            
+
             Destroy(impactGO, 2f);
         }
 
@@ -50,23 +56,23 @@ public class Gun: MonoBehaviour
         }
     }
 
-public void BulletEffect(RaycastHit hit)
-{
-    GameObject impact = Instantiate(
-        bulletEffect,
-        hit.point,
-        Quaternion.LookRotation(hit.normal)
-    );
+    // public void BulletEffect(RaycastHit hit)
+    // {
+    //     GameObject impact = Instantiate(
+    //         bulletEffect,
+    //         hit.point,
+    //         Quaternion.LookRotation(hit.normal)
+    //     );
 
-    impact.transform.SetParent(hit.transform);
+    //     impact.transform.SetParent(hit.transform);
 
-    impact.transform.localPosition =
-        hit.transform.InverseTransformPoint(hit.point + hit.normal * 0.001f);
+    //     impact.transform.localPosition =
+    //         hit.transform.InverseTransformPoint(hit.point + hit.normal * 0.001f);
 
-    impact.transform.localRotation =
-        Quaternion.Inverse(hit.transform.rotation) *
-        Quaternion.LookRotation(hit.normal);
+    //     impact.transform.localRotation =
+    //         Quaternion.Inverse(hit.transform.rotation) *
+    //         Quaternion.LookRotation(hit.normal);
 
-   // Destroy(impact, 10f);
-    }
+    //     // Destroy(impact, 10f);
+    // }
 }
