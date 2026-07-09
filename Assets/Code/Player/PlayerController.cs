@@ -7,15 +7,19 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerStats))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private GameObject inventoryWindow;
+
     private PlayerInput playerInput;
     private PlayerInput.PlayerActions playerActions;
     private PlayerMovement playerMovement;
     private PlayerLook playerLook;
     private PlayerInteract playerInteract;
     private Gun gun;
+
+    private bool inventoryOpen;
+
     void Awake()
     {
-        
         gun = GetComponentInChildren<Gun>();
 
         playerInput = new PlayerInput();
@@ -25,6 +29,10 @@ public class PlayerController : MonoBehaviour
         playerMovement = GetComponent<PlayerMovement>();
         playerLook = GetComponent<PlayerLook>();
         playerInteract = GetComponent<PlayerInteract>();
+
+        inventoryWindow.SetActive(false);
+
+        playerActions.Inventory.performed += ctx => ToggleInventory();
 
         playerActions.Jump.performed += ctx => playerMovement.Jump();
         playerActions.Interact.performed += ctx => playerInteract.Interact();
@@ -37,7 +45,7 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-             
+
                 playerMovement.SetSprinting(true);
             }
         };
@@ -50,14 +58,14 @@ public class PlayerController : MonoBehaviour
         };
         playerActions.Crouch.performed += ctx =>
         {
-          if (PlayerSettings.CrouchMode == ButtonMode.Toggle)
-          {
-              playerMovement.ToggleCrouch();
-          }
-          else
-          {
-              playerMovement.SetCrouching(ctx.ReadValueAsButton());
-          }  
+            if (PlayerSettings.CrouchMode == ButtonMode.Toggle)
+            {
+                playerMovement.ToggleCrouch();
+            }
+            else
+            {
+                playerMovement.SetCrouching(ctx.ReadValueAsButton());
+            }
         };
         playerActions.Crouch.canceled += ctx =>
         {
@@ -71,19 +79,38 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+
+        if (inventoryOpen)
+        {
+            return;
+        }
         playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
         playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
         playerInteract.CheckForInteractable();
-        
+
         if (playerActions.Attack.ReadValue<float>() > 0f)
         {
             gun.FireRate();
         }
+
+    }
+
+    private void ToggleInventory()
+    {
+        inventoryOpen = !inventoryOpen;
+
+        inventoryWindow.SetActive(inventoryOpen);
+
+        Cursor.visible = inventoryOpen;
+
+        Cursor.lockState = inventoryOpen
+            ? CursorLockMode.None
+            : CursorLockMode.Locked;
     }
 
 
     private void OnEnable() => playerActions.Enable();
-    private void OnDisable() =>  playerActions.Disable();
+    private void OnDisable() => playerActions.Disable();
 
-    
+
 }
