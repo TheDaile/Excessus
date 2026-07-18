@@ -19,9 +19,10 @@ MonoBehaviour:
   stackable: 1
   pickupAmount: 1
   healAmount: 45
-  weapon: {fileID: 0}
+  weapon: {fileID: 6347880987826618143, guid: f44ad2b62cd29684aacb19569043af2a, type: 3}
   weaponDamage: 10
   weaponRange: 100
   weaponFireRate: 15
   weaponFireForce: 15
+  dropPrefab: {fileID: 0}
   keyId: default

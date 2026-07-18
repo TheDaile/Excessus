@@ -75,6 +75,10 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         {
             owner.UseSlot(slotKind, slotIndex);
         }
+        else if (eventData.button == PointerEventData.InputButton.Middle)
+        {
+            owner.DropSlotItem(slotKind, slotIndex);
+        }
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -98,6 +102,12 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        bool droppedOutside = draggedSlot == this && !IsPointerOverInventorySlot(eventData);
+        if (droppedOutside && owner != null)
+        {
+            owner.DropSlotItem(slotKind, slotIndex);
+        }
+
         ClearDragGhost();
     }
 
@@ -109,6 +119,17 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         owner.MoveSlot(draggedSlot.SlotKind, draggedSlot.SlotIndex, slotKind, slotIndex);
+    }
+
+    private bool IsPointerOverInventorySlot(PointerEventData eventData)
+    {
+        if (eventData == null || eventData.pointerCurrentRaycast.gameObject == null)
+        {
+            return false;
+        }
+
+        InventorySlotUI slotUi = eventData.pointerCurrentRaycast.gameObject.GetComponentInParent<InventorySlotUI>();
+        return slotUi != null;
     }
 
     private void EnsureVisuals()

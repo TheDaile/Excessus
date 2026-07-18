@@ -51,6 +51,7 @@ public class PickupItem : Interactable
             }
             else
             {
+                DisablePhysics();
                 gameObject.SetActive(false);
             }
         }
@@ -69,6 +70,26 @@ public class PickupItem : Interactable
         }
 
         promptMessage = "pick up " + item.ItemName;
+    }
+
+    public void Setup(InventoryItemData itemData, int amount, bool destroyWhenPickedUpValue = true)
+    {
+        item = itemData;
+        this.amount = Mathf.Max(1, amount);
+        destroyWhenPickedUp = destroyWhenPickedUpValue;
+        RefreshPrompt();
+    }
+
+    private void DisablePhysics()
+    {
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+            rb.detectCollisions = false;
+        }
     }
 
 #if UNITY_EDITOR

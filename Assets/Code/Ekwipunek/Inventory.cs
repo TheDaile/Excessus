@@ -182,6 +182,24 @@ public class InventoryUI : MonoBehaviour
         return UseSlot(InventorySlotKind.QuickUse, slotIndex);
     }
 
+    public bool DropSlotItem(InventorySlotKind slotKind, int slotIndex)
+    {
+        InventorySlot slot = GetSlot(slotKind, slotIndex);
+        if (slot == null || slot.IsEmpty)
+        {
+            return false;
+        }
+
+        Vector3 dropPosition = GetDropPosition();
+        if (!CreateDropPickup(slot.Item, slot.Amount, dropPosition))
+        {
+            return false;
+        }
+
+        RemoveFromSlot(slotKind, slotIndex, slot.Amount);
+        return true;
+    }
+
     public void MoveSlot(int fromIndex, int toIndex)
     {
         MoveSlot(InventorySlotKind.Inventory, fromIndex, InventorySlotKind.Inventory, toIndex);
@@ -527,6 +545,71 @@ public class InventoryUI : MonoBehaviour
         }
 
         RefreshAllSlots();
+    }
+
+    private Vector3 GetDropPosition()
+    {
+        Transform dropRoot = null;
+        PlayerController playerController = FindFirstObjectByType<PlayerController>();
+        if (playerController != null)
+        {
+            dropRoot = playerController.transform;
+        }
+        else if (Camera.main != null)
+        {
+            dropRoot = Camera.main.transform;
+        }
+
+        if (dropRoot == null)
+        {
+            return Vector3.zero;
+        }
+
+        return dropRoot.position + dropRoot.forward * 1.25f + Vector3.up * 0.25f;
+    }
+
+    private bool CreateDropPickup(InventoryItemData item, int amount, Vector3 position)
+    {
+        if (item == null || amount <= 0)
+        {
+            return false;
+        }
+
+        GameObject prefab = item.DropPrefab;
+        if (prefab == null)
+        {
+            Debug.LogWarning("Cannot drop item because no drop prefab is assigned.", this);
+            return false;
+        }
+
+        GameObject dropObject = Instantiate(prefab, position, Quaternion.identity);
+        EnablePhysics(dropObject);
+
+        PickupItem pickup = dropObject.GetComponent<PickupItem>();
+        if (pickup == null)
+        {
+            pickup = dropObject.AddComponent<PickupItem>();
+        }
+
+        pickup.Setup(item, amount, true);
+        return true;
+    }
+
+    private void EnablePhysics(GameObject dropObject)
+    {
+        if (dropObject == null)
+        {
+            return;
+        }
+
+        Rigidbody[] bodies = dropObject.GetComponentsInChildren<Rigidbody>(true);
+        foreach (Rigidbody rb in bodies)
+        {
+            rb.isKinematic = false;
+            rb.detectCollisions = true;
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
     }
 
     private void ShowItemDescription(InventoryItemData item, int amount)

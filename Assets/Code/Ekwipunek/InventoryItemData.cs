@@ -28,6 +28,9 @@ public class InventoryItemData : ScriptableObject
     [Min(0f)]
     [SerializeField] private float weaponFireForce = 15f;
 
+    [Header("Drop")]
+    [SerializeField] private GameObject dropPrefab;
+
     [Header("Key")]
     [SerializeField] private string keyId = "default";
 
@@ -44,6 +47,7 @@ public class InventoryItemData : ScriptableObject
     public float WeaponFireForce => weaponFireForce;
     public string KeyId => keyId;
     public GameObject Weapon => weapon;
+    public GameObject DropPrefab => dropPrefab != null ? dropPrefab : weapon;
 
 #if UNITY_EDITOR
     private void OnValidate()
