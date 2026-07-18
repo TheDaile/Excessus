@@ -56,6 +56,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
 
         iconImage.sprite = slot.Item.Icon;
         iconImage.enabled = slot.Item.Icon != null;
+        // Ensure icon renders with its original colors (don't inherit background tint)
+        if (iconImage.enabled)
+        {
+            iconImage.color = Color.white;
+        }
         fallbackIconText.text = slot.Item.Icon == null ? GetFallbackIcon(slot.Item) : string.Empty;
         amountText.text = slot.Amount > 1 ? slot.Amount.ToString() : string.Empty;
     }
@@ -105,7 +110,16 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         bool droppedOutside = draggedSlot == this && !IsPointerOverInventorySlot(eventData);
         if (droppedOutside && owner != null)
         {
-            owner.DropSlotItem(slotKind, slotIndex);
+            // If dropping outside the inventory area, drop only one item from stackable inventory slots,
+            // but drop the whole stack when dropping equipment/weapon/quick-use.
+            if (HasItem && slotKind == InventorySlotKind.Inventory && currentSlot.Item != null && currentSlot.Item.IsStackable)
+            {
+                owner.DropSlotAmount(slotKind, slotIndex, 1);
+            }
+            else
+            {
+                owner.DropSlotItem(slotKind, slotIndex);
+            }
         }
 
         ClearDragGhost();
@@ -145,6 +159,14 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         }
 
         background.raycastTarget = true;
+        // Prevent layout groups from stretching the slot uncontrollably
+        LayoutElement layout = background.GetComponent<LayoutElement>();
+        if (layout == null)
+        {
+            layout = background.gameObject.AddComponent<LayoutElement>();
+        }
+        layout.flexibleHeight = 0;
+        layout.flexibleWidth = 0;
 
         if (iconImage == null)
         {
@@ -168,6 +190,13 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
             fallbackIconText = CreateChildText("Fallback Icon", 0f, TextAlignmentOptions.Center, 32f);
         }
 
+        // Position the fallback/name text near the top of the slot so it doesn't overlap
+        // other UI (place it in the top ~40% of the slot and keep small horizontal padding)
+        RectTransform fallbackRect = fallbackIconText.rectTransform;
+        fallbackRect.anchorMin = new Vector2(0f, 0.6f);
+        fallbackRect.anchorMax = new Vector2(1f, 1f);
+        fallbackRect.offsetMin = new Vector2(6f, 6f);
+        fallbackRect.offsetMax = new Vector2(-6f, -6f);
         fallbackIconText.raycastTarget = false;
 
         if (amountText == null)
@@ -226,6 +255,13 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         TextMeshProUGUI text = child.AddComponent<TextMeshProUGUI>();
         text.alignment = alignment;
         text.fontSize = fontSize;
+        // Enable auto-sizing so long names scale to fit the slot
+        text.enableAutoSizing = true;
+        text.fontSizeMin = Mathf.Max(6f, fontSize * 0.5f);
+        text.fontSizeMax = fontSize;
+        // Prevent unexpected wrapping/overflow that can cover other UI
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Truncate;
         text.color = Color.white;
         text.text = string.Empty;
         return text;
@@ -280,6 +316,11 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         TextMeshProUGUI text = child.AddComponent<TextMeshProUGUI>();
         text.alignment = TextAlignmentOptions.Center;
         text.fontSize = 32f;
+        text.enableAutoSizing = true;
+        text.fontSizeMin = 12f;
+        text.fontSizeMax = 32f;
+        text.textWrappingMode = TextWrappingModes.NoWrap;
+        text.overflowMode = TextOverflowModes.Truncate;
         text.color = Color.white;
         text.raycastTarget = false;
         return text;

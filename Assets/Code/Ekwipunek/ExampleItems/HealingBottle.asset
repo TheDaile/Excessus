@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Butelka
   description: Restores health when used.
-  icon: {fileID: -1089533485, guid: 22d376f90c4c4cc4aa6fb3f2e8cb7200, type: 3}
+  icon: {fileID: 461129744, guid: 137f986a342e287469a89576a54ff813, type: 3}
   itemType: 1
   stackable: 1
   pickupAmount: 1

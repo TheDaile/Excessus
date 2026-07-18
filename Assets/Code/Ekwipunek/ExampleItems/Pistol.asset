@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: Pistolet
   description: A basic firearm. Equip it in a weapon slot and select it with 1, 2,
     or 3.
-  icon: {fileID: -449040270, guid: 76aae06c95f1ff449af3d0e735c56c05, type: 3}
+  icon: {fileID: 431307798, guid: 00b8bef549558cf40baf8553b8873ef3, type: 3}
   itemType: 2
   stackable: 0
   pickupAmount: 1
@@ -25,4 +25,5 @@ MonoBehaviour:
   weaponRange: 100
   weaponFireRate: 10
   weaponFireForce: 10000
+  dropPrefab: {fileID: 0}
   keyId: default

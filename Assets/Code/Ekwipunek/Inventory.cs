@@ -184,6 +184,11 @@ public class InventoryUI : MonoBehaviour
 
     public bool DropSlotItem(InventorySlotKind slotKind, int slotIndex)
     {
+        return DropSlotAmount(slotKind, slotIndex, -1);
+    }
+
+    public bool DropSlotAmount(InventorySlotKind slotKind, int slotIndex, int amount)
+    {
         InventorySlot slot = GetSlot(slotKind, slotIndex);
         if (slot == null || slot.IsEmpty)
         {
@@ -191,12 +196,24 @@ public class InventoryUI : MonoBehaviour
         }
 
         Vector3 dropPosition = GetDropPosition();
-        if (!CreateDropPickup(slot.Item, slot.Amount, dropPosition))
+
+        int dropAmount;
+        if (amount <= 0)
+        {
+            // default behavior: if amount not provided or <=0, drop one for stackable inventory items, otherwise drop whole stack
+            dropAmount = slot.Item != null && slot.Item.IsStackable && slotKind == InventorySlotKind.Inventory ? 1 : slot.Amount;
+        }
+        else
+        {
+            dropAmount = Mathf.Clamp(amount, 1, slot.Amount);
+        }
+
+        if (!CreateDropPickup(slot.Item, dropAmount, dropPosition))
         {
             return false;
         }
 
-        RemoveFromSlot(slotKind, slotIndex, slot.Amount);
+        RemoveFromSlot(slotKind, slotIndex, dropAmount);
         return true;
     }
 
