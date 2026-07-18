@@ -23,6 +23,6 @@ MonoBehaviour:
   weapon: {fileID: 1430643352268910341, guid: 1b82e5f83ac517141824d4993250444f, type: 3}
   weaponDamage: 10
   weaponRange: 100
-  weaponFireRate: 15
-  weaponFireForce: 15
+  weaponFireRate: 100
+  weaponFireForce: 1000
   keyId: default

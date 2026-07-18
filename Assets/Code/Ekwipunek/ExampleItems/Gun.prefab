@@ -215,7 +215,7 @@ MonoBehaviour:
   fpsCam: {fileID: 0}
   muzzleFlash: {fileID: 2917829649374455129}
   impactEffect: {fileID: 8876132480307443134, guid: 6bf64c0beb2f390429e5648e7bf77462, type: 3}
-  fireforce: 15
+  fireforce: 1000
   fireRate: 15
   nextTimeToFire: 0
 --- !u!114 &1987758099668545674
