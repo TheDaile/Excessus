@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd9032e6ccea9f54ca41aa7be2412216, type: 3}
+  m_Name: Pistol
+  m_EditorClassIdentifier: 
+  itemName: Pistolet
+  description: A basic firearm. Equip it in a weapon slot and select it with 1, 2,
+    or 3.
+  icon: {fileID: -449040270, guid: 76aae06c95f1ff449af3d0e735c56c05, type: 3}
+  itemType: 2
+  stackable: 0
+  pickupAmount: 1
+  healAmount: 0
+  weapon: {fileID: 8357135212891220709, guid: 8157e0c68734d3a4b98f4f3020ac5312, type: 3}
+  weaponDamage: 10
+  weaponRange: 100
+  weaponFireRate: 15
+  weaponFireForce: 15
+  keyId: default

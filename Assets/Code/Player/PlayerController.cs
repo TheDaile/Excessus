@@ -8,6 +8,8 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private GameObject inventoryWindow;
+    [SerializeField] private InventoryUI inventory;
+    [SerializeField] private WeaponEquipment weaponEquipment;
 
     private PlayerInput playerInput;
     private PlayerInput.PlayerActions playerActions;
@@ -30,7 +32,8 @@ public class PlayerController : MonoBehaviour
         playerLook = GetComponent<PlayerLook>();
         playerInteract = GetComponent<PlayerInteract>();
 
-        inventoryWindow.SetActive(false);
+        ResolveWeaponEquipment();
+        ResolveInventory();
 
         playerActions.Inventory.performed += ctx => ToggleInventory();
 
@@ -79,6 +82,7 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        inventoryOpen = inventory != null ? inventory.IsOpen : inventoryOpen;
 
         if (inventoryOpen)
         {
@@ -87,25 +91,131 @@ public class PlayerController : MonoBehaviour
         playerMovement.ProcessMove(playerActions.Move.ReadValue<Vector2>());
         playerLook.ProcessLook(playerActions.Look.ReadValue<Vector2>());
         playerInteract.CheckForInteractable();
+        HandleWeaponHotkeys();
+        HandleQuickUseHotkeys();
 
         if (playerActions.Attack.ReadValue<float>() > 0f)
         {
-            gun.FireRate();
+            if (weaponEquipment != null && weaponEquipment.HasAnyAssignedWeapon)
+            {
+                weaponEquipment.FireActiveWeapon();
+            }
+            else
+            {
+                gun?.FireRate();
+            }
         }
 
     }
 
     private void ToggleInventory()
     {
+        if (inventory != null)
+        {
+            inventory.ToggleInventory();
+            inventoryOpen = inventory.IsOpen;
+            return;
+        }
+
         inventoryOpen = !inventoryOpen;
 
-        inventoryWindow.SetActive(inventoryOpen);
+        if (inventoryWindow != null)
+        {
+            inventoryWindow.SetActive(inventoryOpen);
+        }
 
         Cursor.visible = inventoryOpen;
 
         Cursor.lockState = inventoryOpen
             ? CursorLockMode.None
             : CursorLockMode.Locked;
+    }
+
+    private void ResolveInventory()
+    {
+        if (inventory == null)
+        {
+            inventory = FindFirstObjectByType<InventoryUI>();
+        }
+
+        if (inventory != null)
+        {
+            inventory.SetOpen(false);
+            inventoryOpen = inventory.IsOpen;
+            return;
+        }
+
+        if (inventoryWindow != null)
+        {
+            inventoryWindow.SetActive(false);
+        }
+    }
+
+    private void ResolveWeaponEquipment()
+    {
+        if (weaponEquipment == null)
+        {
+            weaponEquipment = GetComponent<WeaponEquipment>();
+        }
+
+        if (weaponEquipment == null)
+        {
+            weaponEquipment = gameObject.AddComponent<WeaponEquipment>();
+        }
+    }
+
+    private void HandleWeaponHotkeys()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null)
+        {
+            return;
+        }
+
+        if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame)
+        {
+            SelectWeaponSlot(0);
+        }
+        else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame)
+        {
+            SelectWeaponSlot(1);
+        }
+        else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
+        {
+            SelectWeaponSlot(2);
+        }
+    }
+
+    private void SelectWeaponSlot(int slotIndex)
+    {
+        if (inventory != null && inventory.SelectWeaponSlot(slotIndex))
+        {
+            return;
+        }
+
+        weaponEquipment?.SelectWeapon(slotIndex);
+    }
+
+    private void HandleQuickUseHotkeys()
+    {
+        Keyboard keyboard = Keyboard.current;
+        if (keyboard == null || inventory == null)
+        {
+            return;
+        }
+
+        if (keyboard.digit4Key.wasPressedThisFrame || keyboard.numpad4Key.wasPressedThisFrame)
+        {
+            inventory.UseQuickSlot(0);
+        }
+        else if (keyboard.digit5Key.wasPressedThisFrame || keyboard.numpad5Key.wasPressedThisFrame)
+        {
+            inventory.UseQuickSlot(1);
+        }
+        else if (keyboard.digit6Key.wasPressedThisFrame || keyboard.numpad6Key.wasPressedThisFrame)
+        {
+            inventory.UseQuickSlot(2);
+        }
     }
 
 
