@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: New Item
   description: 
   icon: {fileID: 0}
-  itemType: 0
+  itemType: 1
   stackable: 1
   pickupAmount: 1
   healAmount: 0

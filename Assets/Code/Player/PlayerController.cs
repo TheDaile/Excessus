@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject inventoryWindow;
     [SerializeField] private InventoryUI inventory;
     [SerializeField] private WeaponEquipment weaponEquipment;
+    [SerializeField] private float Force;
 
     private PlayerInput playerInput;
     private PlayerInput.PlayerActions playerActions;
@@ -217,6 +218,18 @@ public class PlayerController : MonoBehaviour
             inventory.UseQuickSlot(2);
         }
     }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+{
+    Rigidbody rb = hit.collider.attachedRigidbody;
+
+    if (rb == null || rb.isKinematic)
+        return;
+
+    Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z);
+
+    rb.AddForce(pushDir * Force, ForceMode.Impulse);
+}
 
 
     private void OnEnable() => playerActions.Enable();
