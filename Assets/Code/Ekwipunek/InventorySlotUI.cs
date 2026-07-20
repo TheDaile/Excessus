@@ -253,17 +253,7 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         rectTransform.offsetMax = Vector2.one * -padding;
 
         TextMeshProUGUI text = child.AddComponent<TextMeshProUGUI>();
-        text.alignment = alignment;
-        text.fontSize = fontSize;
-        // Enable auto-sizing so long names scale to fit the slot
-        text.enableAutoSizing = true;
-        text.fontSizeMin = Mathf.Max(6f, fontSize * 0.5f);
-        text.fontSizeMax = fontSize;
-        // Prevent unexpected wrapping/overflow that can cover other UI
-        text.textWrappingMode = TextWrappingModes.NoWrap;
-        text.overflowMode = TextOverflowModes.Truncate;
-        text.color = Color.white;
-        text.text = string.Empty;
+        ApplyTextStyle(text, alignment, fontSize);
         return text;
     }
 
@@ -314,16 +304,47 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IBeginDragHa
         rectTransform.offsetMax = Vector2.zero;
 
         TextMeshProUGUI text = child.AddComponent<TextMeshProUGUI>();
-        text.alignment = TextAlignmentOptions.Center;
-        text.fontSize = 32f;
+        ApplyTextStyle(text, TextAlignmentOptions.Center, 32f);
+        text.raycastTarget = false;
+        return text;
+    }
+
+    private void ApplyTextStyle(TextMeshProUGUI text, TextAlignmentOptions alignment, float fontSize)
+    {
+        if (text == null)
+        {
+            return;
+        }
+
+        text.alignment = alignment;
+        text.fontSize = fontSize;
+        // Enable auto-sizing so long names scale to fit the slot
         text.enableAutoSizing = true;
-        text.fontSizeMin = 12f;
-        text.fontSizeMax = 32f;
+        text.fontSizeMin = Mathf.Max(12f, fontSize * 1f);
+        text.fontSizeMax = fontSize;
+        // Prevent unexpected wrapping/overflow that can cover other UI
         text.textWrappingMode = TextWrappingModes.NoWrap;
         text.overflowMode = TextOverflowModes.Truncate;
         text.color = Color.white;
-        text.raycastTarget = false;
-        return text;
+        text.text = string.Empty;
+
+        TextMeshProUGUI fontSource = GetFontSource();
+        if (fontSource != null)
+        {
+            text.font = fontSource.font;
+            text.fontSharedMaterial = fontSource.fontSharedMaterial;
+            text.color = fontSource.color;
+        }
+        else if (text.font == null)
+        {
+            text.font = TMP_Settings.defaultFontAsset;
+        }
+    }
+
+    private TextMeshProUGUI GetFontSource()
+    {
+        TextMeshProUGUI existing = GetComponentInChildren<TextMeshProUGUI>(true);
+        return existing != null && existing.transform != transform ? existing : null;
     }
 
     private static void ClearDragGhost()

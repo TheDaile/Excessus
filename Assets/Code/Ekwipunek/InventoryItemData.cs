@@ -1,3 +1,5 @@
+using System;
+using System.Runtime.Serialization;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Inventory Item", menuName = "Excessus/Inventory/Item")]
@@ -34,6 +36,15 @@ public class InventoryItemData : ScriptableObject
     [Header("Key")]
     [SerializeField] private string keyId = "default";
 
+    [Header("Plot")]
+    [SerializeField] private string PlotId = "default";
+
+    [Header("Amunition")]
+    [SerializeField] private float AmoDMG = 10f;
+    [Min(0f)]
+    [SerializeField] private string AmoId = "default";
+
+
     public string ItemName => itemName;
     public string Description => description;
     public Sprite Icon => icon;
@@ -48,6 +59,8 @@ public class InventoryItemData : ScriptableObject
     public string KeyId => keyId;
     public GameObject Weapon => weapon;
     public GameObject DropPrefab => dropPrefab != null ? dropPrefab : weapon;
+    public float AmoDamage => AmoDMG;
+    public string AmoItemId => AmoId;
 
 #if UNITY_EDITOR
     private void OnValidate()

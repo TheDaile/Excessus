@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd9032e6ccea9f54ca41aa7be2412216, type: 3}
+  m_Name: Papier Bocian
+  m_EditorClassIdentifier: Excessus.Runtime::InventoryItemData
+  itemName: Papier Toaletowy Bocian
+  description: "Najta\u0144szy papier toaletowy do dupska.\nMa p\xF3\u0142 a nie
+    5 warstw, jest tak szorstki, \u017Ce zedrze z Ciebie grzech pierworodny.\nPapier
+    \u015Bcierny."
+  icon: {fileID: 1532522790, guid: 2970cbca7ed6a56499c6baea60d22494, type: 3}
+  itemType: 4
+  stackable: 1
+  pickupAmount: 1
+  healAmount: 0
+  weapon: {fileID: 4079370873531196194, guid: 2235e1bdc87e80142a3e1878adf24973, type: 3}
+  weaponDamage: 10
+  weaponRange: 100
+  weaponFireRate: 15
+  weaponFireForce: 15
+  dropPrefab: {fileID: 4079370873531196194, guid: 2235e1bdc87e80142a3e1878adf24973, type: 3}
+  keyId: default
+  PlotId: bocian
+  AmoDMG: 10
+  AmoId: default

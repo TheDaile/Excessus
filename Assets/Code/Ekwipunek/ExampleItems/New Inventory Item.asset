@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fd9032e6ccea9f54ca41aa7be2412216, type: 3}
-  m_Name: ReceptionKey
-  m_EditorClassIdentifier: 
-  itemName: Klucz
-  description: Opens a matching locked door when you interact with it.
+  m_Name: New Inventory Item
+  m_EditorClassIdentifier: Excessus.Runtime::InventoryItemData
+  itemName: New Item
+  description: 
   icon: {fileID: 0}
-  itemType: 3
+  itemType: 0
   stackable: 1
   pickupAmount: 1
   healAmount: 0
@@ -25,4 +25,7 @@ MonoBehaviour:
   weaponFireRate: 15
   weaponFireForce: 15
   dropPrefab: {fileID: 0}
-  keyId: reception
+  keyId: default
+  PlotId: default
+  AmoDMG: 10
+  AmoId: default

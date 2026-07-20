@@ -166,6 +166,9 @@ public class InventoryUI : MonoBehaviour
         {
             case InventoryItemType.Consumable:
                 return UseConsumable(slotKind, slotIndex, item);
+            case InventoryItemType.Plot:
+                Debug.Log("It's Plot item");
+                return false;
             case InventoryItemType.Weapon:
                 return EquipWeaponFromSlot(slotKind, slotIndex);
             case InventoryItemType.Key:
@@ -649,6 +652,7 @@ public class InventoryUI : MonoBehaviour
 
         if (descriptionBodyText != null)
         {
+            descriptionBodyText.textWrappingMode = TextWrappingModes.Normal;
             descriptionBodyText.text = body;
         }
         else if (descriptionTitleText != null)
@@ -703,6 +707,13 @@ public class InventoryUI : MonoBehaviour
             case InventoryItemType.Key:
                 builder.AppendLine();
                 builder.AppendLine("Key ID: " + item.KeyId);
+                break;
+            default:
+                if (item.AmoDamage > 0)
+                {
+                    builder.AppendLine();
+                    builder.AppendLine("Ammo DMG: " + item.AmoDamage);
+                }
                 break;
         }
 
